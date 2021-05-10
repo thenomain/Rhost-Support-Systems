@@ -452,20 +452,24 @@ Two ways to display information vertically.
     Removes multiple delimiters from middle, start, and end. 
     e.g., thing1|thing2|||thing4| -> thing1|thing2|thing4
 
+
+// man I hope this works
 &UFUNC.LNUMRANGES [v( d.udf )]=
 	iter( %0, 
 		case( 1, 
-			strmatch( %i0, ?*-?* ), 
-			lnum( first( %i0, - ), rest( %i0, - )), 
+			regmatch( %i0, get( #UDF/regexp.lnumranges ), 0 1 2 ),
+			lnum( %q1, %q2 ), 
 			%i0 
 		)
 	)
 
+&REGEXP.LNUMRANGES [v( d.udf )]=(-?\d+)-(-?\d+)
+
 &HELP.LNUMRANGES [v( d.udf )]=
     lnumranges( <list of numbers or num-ranges> ): 
     Returns the input list, expanding n1-n2 number ranges. 
-    e.g., lnumranges( 4 -6 1 blar 10-15 )
-//  (Thanks Myrddin!)
+    e.g., lnumranges( 4 f-15 10-15 -9--12 1 6 blar 2 )
+//  (Thanks Myrddin and Ambrosia!)
 
 
 // -- PLURAL -------------------------------------------------------------------
