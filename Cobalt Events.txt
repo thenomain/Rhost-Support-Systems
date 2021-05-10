@@ -1,0 +1,1303 @@
+/* 
+
+RHOST-ization of Cobalt's Events
+by
+	Cobalt
+with
+	some tweaks by Thenomain
+and
+	help from the Rhost Discord
+
+REQUIRES: 
+- Myrddin's Mushcron
+- Myrddin's Bboards
+- Ashcomm and a channel for announcements, if using 'event/announce'
+
+This is formatted for Muxify or that other one I wish I could remember.
+
+*/
+
+@set me=QUIET
+think ansi( y, ------>%b, n, Installing Events Command Object, y, %b<------ )
+think This is going to be quite a ride...
+
+@ifelse 
+	not( isdbref( 
+		search( eobject=[lit( strmatch( name( ## ), *mushcron* ))] )
+	))={ 
+		think ansi( r, 
+			<events installer> I couldn't find Myrrdin's Mushcron%, so this 
+			system won't be able to install the clear events code. 
+		)
+	}
+
+@ifelse 
+	not( isdbref( 
+		search( eobject = [lit( strmatch( name( ## ), *Global BBS* ))] )
+	))={ 
+		think ansi( r, 
+			<events installer> I couldn't find Myrrdin's Global BBS%, so this 
+			system won't be able to post when new events take place. 
+		)
+	}
+
+
+// -----------------------------------------------------------------------------
+
+
+@create Events Command Object <ECO>
+@fo me=&d.eco me=[search( name=@create Events Command Object <ECO> )]
+@set Events Command Object <ECO>=inherit safe
+
+
+/*
+================================================================================
+
+Dot-Attribute Shortcuts
+
+PLEASE CHANGE THESE AS NEEDED
+
+================================================================================
+*/
+
+// verification shortcuts
+&.ISSTAFF [v( d.eco )]=isstaff( %0 )
+&.ISAPPROVED [v( d.eco )]=isapproved( %0 )
+
+// format shortcuts
+&.HEADER [v( d.eco )]=header( %0 )
+&.FOOTER [v( d.eco )]=footer( %0 )
+&.DIVIDER [v( d.eco )]=divider( %0 )
+&.TITLESTR [v( d.eco )]=iter( %0, capstr( lcstr( %i0 )))
+
+&.MSG [v( d.eco )]=ansi( r, >%b, h, %0, r, %b<%b, n, %1 )
+&.MUDNAME [v( d.eco )]=mudname()
+
+// cross-platform shortcuts
+&.ITEMIZE [v( d.eco )]=elist(%0,%2,%1,%4,%3)
+&.PMATCH+ [v( d.eco )]=if( strmatch( %0, me ), %#, pmatch( %0 ))
+&.LJUST [v( d.eco )]=ljc( %0, %1, %2 )
+&.RJUST [v( d.eco )]=rjc( %0, %1, %2 )
+
+
+/*
+================================================================================
+
+Data.
+
+PLEASE CHANGE THESE AS NEEDED
+
+================================================================================
+*/
+
+
+&D.BBOARD.EVENTS [v( d.eco )]=????
+
+@ifelse not( isint( get( v( d.eco )/d.bboard.events )))={ 
+	think ansi( r, 
+			<events installer> Well%, I set a place for bboard events 
+			but it's not a real number so you might want to look into that. 
+		)
+	}
+
+&D.EVENTS_CHANNEL [v( d.eco )]=Events
+&DEFAULT.TIMEZONE [v( d.eco )]=ET
+&D.CREDITS [v( d.eco )]=
+	Original Code: Cobalt (from the TinyMUX/WoD game space) %r
+	Regexp and Rhost Porting: Thenomain (everywhere) %r
+
+
+/*
+================================================================================
+
+Includes: Code that gets used over and over and over and aiiigh!
+
+	@include %!/include.event_is_numeric; 
+	@include %!/include.event_exists; 
+	@include %!/include.user_is_staff_or_approved; 
+	@include %!/include.user_is_staff_or_owner; 
+
+
+================================================================================
+*/
+
+&INCLUDE.EVENT_IS_NUMERIC [v( d.eco )]=
+	@assert isnum( %1 )={ 
+		@pemit %#=u( .msg, Events, Please use a number such as 'Event 1'. )
+	};
+
+&INCLUDE.EVENT_EXISTS [v( d.eco )]=
+	@assert hasattr( v( d.edb ), event.%1 )={ 
+		@pemit %#=u( .msg, Events, There is no Event %1. 
+		Check 'Events' for the list of current events. )
+	};
+
+&INCLUDE.USER_IS_STAFF_OR_APPROVED [v( d.eco )]=
+	@assert cor( u( .isstaff, %# ), u( .isapproved, %# ))={ 
+		@pemit %#=u( .msg, Events, Sorry%, only staff or approved characters 
+		can use this command. )
+	}; 
+
+&INCLUDE.USER_IS_STAFF_OR_OWNER [v( d.eco )]=
+	@assert 
+		cor( 
+			u( .isstaff, %# ), 
+			strmatch( first( get( v( d.edb )/event.%0 ), | ), %# )
+		)={ 
+			@pemit %#=u( .msg, Events, 
+				Only [name( first( get( v( d.edb )/event.%0 ), | ))] or Staff 
+				can use this command. 
+			)
+		}; 
+
+
+/*
+================================================================================
+
+Events: List All Events
+
+================================================================================
+*/
+
+&C.EVENTS [v( d.eco )]=$^\+?events?$:
+	@pemit %#=
+		[u( .header, Current [u( .mudname )] Events )]%r
+		[u( display.events.header )]%r
+		[iter( lattr( v( d.edb )/event.* ), 
+			u( display.events.one-line, rest( %i0, . )), 
+			, %r 
+		)]%r
+		[u( .footer, words( lattr( v( d.edb )/event.* )))]
+
+@set v( d.eco )/C.EVENTS=regexp
+
+
+/* 
+================================================================================
+
+Event *: Look up a specific event
+
+The display could probably go in a different "display" attribute, but hey.
+
+================================================================================
+*/
+
+
+&C.EVENT_LOOKUP [v( d.eco )]=$^\+?events? (.*)$:
+// ..errors
+	@include %!/include.event_is_numeric; 
+	@include %!/include.event_exists; 
+
+// ..show event
+	@pemit %#=
+		strcat( 
+			setq( e, get( v( d.edb )/event.%1 )), 
+			setq( s, lattr( v( d.edb )/summary.%1.* )), 
+
+			u( .header, 
+				Event %1 - 
+				[extract( %qe, 3, 1, | )]
+			), %r, 
+
+			u( v( d.edb )/summary.%1 ), %r%r, 
+
+			ansi( h, Date ), :%b, u( fn.time, event.%1 ) , %r, 
+			ansi( h, Storyteller ), :%b, name( first( %qe, | )), %r, 
+			ansi( h, Genre ), :%b, extract( %qe, 2, 1, | ), 
+
+			if( t( %qs ), %r ), 
+			iter( %qs, 
+				strcat( 
+					ansi( h, capstr( lcstr( last( %i0, . )))), 
+					:%b, 
+					get( v( d.edb )/%i0 )
+				), 
+				, %r 
+			), 
+
+			%r%r, 
+
+			ansi( h, Signups ), :, %b, 
+			u( .itemize,  
+				iter( get( v( d.edb )/signups.%1 ), 
+					name( %i0 ), 
+					, | 
+				), 
+				| 
+			), %r, 
+
+			u( .footer, 
+				strcat( 
+					Event %1:, %b, 
+					extract( %qe, 3, 1, | ), %b, -, %b, 
+					trim( u( fn.time, event.%1 )), %b, -, %b, 
+					words( get( v( d.edb )/signups.%1 ))
+				)
+			)
+		)
+
+@set v( d.eco )/C.EVENT_LOOKUP=regexp
+
+
+/*
+================================================================================
+
+Event/create <name>=<date and time>/<genre>/<summary>
+
+t: time in unix secs
+0: total number of events the system has handled
+
+================================================================================
+*/
+
+&C.EVENT/CREATE [v( d.eco )]=$(?s)^\+?events?/create (.+?)=(.+?)/(.+?)/(.+)$:
+	@include %!/include.user_is_staff_or_approved;
+
+	@assert neq( setr( t, convtime( %2 )), -1 )={ 
+		@pemit %#=u( .msg, Events, 
+			'%2' is not a proper datestamp. For an example%, see 'help time'. 
+		)
+	}; 
+
+	@assert lte( secs(), %qt )={ 
+		@pemit %#=u( .msg, Events, '%2' has already passed. )
+	}; 
+
+// .. make that event
+	think 
+		0: [setr( 0, inc( get( v( d.edb )/eventtotal )))]; 
+
+	@set [v( d.edb )]=eventtotal:%q0; 
+	@set [v( d.edb )]=event.%q0:%#|%3|%1|%qt; 
+	@set [v( d.edb )]=summary.%q0:%4; 
+	@set [v( d.edb )]=remindday.%q0:[sub( %qt, 86400 )];  
+
+	@pemit %#=u( .msg, Events, 
+		You have setup Event %q0. 
+		Please check to make certain all of the details are correct!
+	); 
+
+	@trigger %!/trig.post=%1, %4, [convsecs( %qt )], %q0, %3; 
+
+
+@set v( d.eco )/C.EVENT/CREATE=regexp
+
+
+/*
+================================================================================
+
+Trigger: Post an  Event to BBoard System
+
+0: event name
+1: event summary
+2: event timestamp
+3: event number
+4: event genre
+
+================================================================================
+*/
+
+&TRIG.POST [v( d.eco )]=
+	+bbpost [v( d.bboard.events )]/Event %3: %0=
+	[ansi( h, Summary )]: %1%r
+	%r
+	[ansi( h, Time )]: %2%r
+	%r
+	[ansi( h, Posted As )]: Event %3%r
+	%r
+	[ansi( h, Genre )]: %4
+	%r
+
+
+/*
+======================================================================
+
+Event/date <num>=<new date>
+
+======================================================================
+*/
+
+&C.EVENT/DATE [v( d.eco )]=$^\+?events?/date (.*?)=(.+)$:
+
+// .. errors
+	@include %!/include.user_is_staff_or_owner; 
+	@include %!/include.event_is_numeric;
+	@include %!/include.event_exists; 
+
+	@assert neq( setr( t, convtime( %2 )), -1 )={ 
+		@pemit %#=u( .msg, Events, 
+			'%2' is not a proper datestamp. 
+			For an example%, see 'help time'.
+		)
+	}; 
+
+// set!
+	@set v( d.edb )=
+		event.%1:
+		[extract( get( v( d.edb )/event.%1 ), 1, 3, | )]|
+		%qt; 
+
+	@set v( d.edb )=remindday.%1:[sub( %qt, 86400 )]; 
+
+	@pemit %#=u( .msg, Events, 
+		You change the date of %1 to [convsecs( %qt )].
+	); 
+
+	@trigger %!/trig.mail=
+		get( v( d.edb )/signups.%1 ), 
+		Event Reschedule, 
+		[name( %# )] has rescheduled Event %1 
+		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%) 
+		to [convsecs( %qt )].; 
+
+@set v( d.eco )/C.EVENT/DATE=regexp
+
+
+/*
+================================================================================
+
+Event/name <num>=<new name>
+
+e: Event
+o: Old Name
+
+================================================================================
+*/
+
+&C.EVENT/NAME [v( d.eco )]=$^\+?events?/name (.*?)=(.+)$:
+
+// .. errors
+	@include %!/include.user_is_staff_or_owner; 
+	@include %!/include.event_is_numeric;
+	@include %!/include.event_exists; 
+
+	think 
+		e: [setr( e, get( v( d.edb )/event.%1 ))]%r
+		o: [setr( o, elements( %qe, 3, | ))]%r;
+
+// set!
+	@set v( d.edb )=event.%1:[replace( %qe, 3, %2, | )]; 
+
+	@pemit %#=u( .msg, Events, 
+		You change the name of %1 to '%2'. 
+	); 
+
+	@trigger %!/trig.mail=
+		get( v( d.edb )/signups.%1 ), 
+		Event Rename, 
+		[name( %# )] has renamed Event %1 %(%qo%) to '%2'.; 
+
+@set v( d.eco )/C.EVENT/NAME=regexp
+
+
+/*
+================================================================================
+
+Event/genre <num>=<new name>
+
+e: &event.<num>
+o: Old Genre
+n: Event Name
+
+================================================================================
+*/
+
+&C.EVENT/GENRE [v( d.eco )]=$^\+?events?/genre (.*?)=(.+)$:
+
+// .. errors
+	@include %!/include.user_is_staff_or_owner; 
+	@include %!/include.event_is_numeric;
+	@include %!/include.event_exists; 
+
+	think 
+		e: [setr( e, get( v( d.edb )/event.%1 ))]%r
+		o: [setr( o, elements( %qe, 2, | ))]%r
+		n: [setr( n, elements( %qe, 3, | ))]%r;
+
+// set!
+	@set v( d.edb )=event.%1:[replace( %qe, 2, %2, | )]; 
+
+	@pemit %#=u( .msg, Events, 
+		You change the genre of %1 %(%qn%) from '%qo' to '%2'.
+	); 
+
+	@trigger %!/trig.mail=
+		get( v( d.edb )/signups.%1 ), 
+		Event Re-Genre-ing, 
+		[name( %# )] has changed the genre of Event %1 %(%qn%) to '%2'.; 
+
+@set v( d.eco )/C.EVENT/GENRE=regexp
+
+
+
+/*
+================================================================================
+
+Event/signup <num>
+
+================================================================================
+*/
+
+&C.EVENT/SIGNUP [v( d.eco )]=$^\+?events?/signup (.*)$:
+// .. errors
+	@include %!/include.user_is_staff_or_approved; 
+	@include %!/include.event_is_numeric; 
+	@include %!/include.event_exists; 
+	@assert not( grab( get( v( d.edb )/signups.%1 ), pmatch( %# )))={ 
+		@pemit %#=u( .msg, Events, 
+			You are already signed up for Event %1.  
+		)
+	}; 
+
+// .. sign me up!
+	@set v( d.edb )=
+		signups.%1:
+		[trim( cat( get( v( d.edb )/signups.%1 ), %# ))];
+
+	@pemit %#=u( .msg, Events, 
+		You have been signed up for Event %1. 
+	); 
+
+	@trigger %!/trig.mail=
+		first( get( v( d.edb )/event.%1 ), | ), 
+		New Event Signup, 
+		[name( %# )] has signed up for your Event %1 
+		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%).; 
+
+@set v( d.eco )/C.EVENT/SIGNUP=regexp
+
+
+/*
+================================================================================
+
+Trigger: Send a quick mail with the quick mail system. 
+
+================================================================================
+*/
+
+// &TRIG.MAIL [v( d.eco )]=@mail/quick %0/%1=%2
+TRIG.MAIL [v( d.eco )]=mail %0=%1//%2
+
+
+/*
+================================================================================
+
+Event/Unsignup <num>
+
+================================================================================
+*/
+
+&C.EVENT/UNSIGNUP [v( d.eco )]=$^\+?events?/unsignup (.*)$:
+// .. errors
+	@include %!/include.event_is_numeric; 
+	@include %!/include.event_exists; 
+
+	think 
+		s: [setr( s, get( v( d.edb )/signups.%1 ))]; 
+
+	@assert t( grab( %qs, %# ))={ 
+		@pemit %#=u( .msg, Events, You aren't signed up for Event %1. ) 
+	}; 
+
+// .. unsign me up!
+	@set v( d.edb )=signups.%1:[setdiff( %qs, %# )]; 
+
+	@pemit %#=u( .msg, Events, You have been removed from Event %1. ); 
+
+	@trigger %!/trig.mail=
+		first( get( v( d.edb )/event.%1 ), | ), 
+		New Event Cancellation, 
+		[name( %# )] has unsigned up for your Event %1 
+		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%).; 
+
+@set v( d.eco )/C.EVENT/UNSIGNUP=regexp
+
+
+/*
+================================================================================
+
+Event/cancel <num>
+
+================================================================================
+*/
+
+&C.EVENT/CANCEL [v( d.eco )]=$^\+?events?/cancel (.*)$:
+	@include %!/include.event_is_numeric; 
+	@include %!/include.event_exists; 
+
+	@assert cor( 
+			u( .isstaff, %# ), 
+			strmatch( first( get( v( d.edb )/event.%1 ), | ), %# )
+		)={ 
+			@pemit %#=u( .msg, Events, 
+				Only [name( first( get( v( d.edb )/event.%1 ), | ))] 
+				or Staff can cancel this event.
+ 			)
+		};  
+
+// .. cancel this event!
+	@trigger %!/trig.mail=
+		get( v( d.edb )/signups.%1 ), 
+		Event Cancellation, 
+		[name( %# )] has canceled Event %1 
+		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%).; 
+
+	@wipe [v( d.edb )]/*.%1;
+	@wipe [v( d.edb )]/*.%1.*;
+
+	@pemit %#=u( .msg, Events, You have canceled Event %1. ); 
+
+
+@set v( d.eco )/C.EVENT/CANCEL=regexp
+
+
+/*
+================================================================================
+
+Event/remove <num>=<person>
+
+p: dbref of person to remove
+
+================================================================================
+*/
+
+&C.EVENT/REMOVE [v( d.eco )]=$^\+?events?/remove (.+?)=(.+)$:
+// .. who?
+	think p: [setr( p, pmatch( %2 ))]; 
+
+// .. errors
+	@include %!/include.user_is_staff_or_owner; 
+	@include %!/include.event_is_numeric; 
+	@include %!/include.event_exists; 
+
+	think s: [setr( s, get( v( d.edb )/signups.%1 ))]; 
+
+	@assert t( grab( %qs, %qp ))={ 
+		@pemit %#=u( .msg, Events,  
+			[name( %qp )] is not signed up for Event %1. 
+		)
+	}; 
+
+// .. remove someone from the event!
+	@set v( d.edb )=signups.%1:[setdiff( %qs, %qp )]; 
+
+	@pemit %#=u( .msg, Events, You've removed [name( %qp )] from Event %1. ); 
+
+	@trigger %!/trig.mail=
+		%qp, 
+		Event Removal, 
+		You have been removed from Event %1 
+		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%).; 
+
+@set v( d.eco )/C.EVENT/REMOVE=regexp
+
+
+/*
+================================================================================
+
+Trigger: Daily
+
+Stuff to do every day.
+
+================================================================================
+*/
+
+&TRIG.DAILY [v( d.eco )]=
+	@trigger %!/trig.clean-old-events; 
+	@trigger %!/trig.notify-upcoming-events; 
+	
+/* 
+================================================================================
+
+Trigger: "Clean" and "Notify". Easier to change later on.
+
+================================================================================
+*/
+
+&TRIG.CLEAN-OLD-EVENTS [v( d.eco )]=
+	@dolist/inline 
+		edit( 
+			filter( fil.past-events, 
+				lattr( v( d.edb )/event.* )
+			), 
+			EVENT., 
+		)={ 
+			@wipe [v( d.edb )]/*.##; 
+			@wipe [v( d.edb )]/*.##.*; 
+		};  
+
+
+// `event.#` -> events that are past 'now'
+&FIL.PAST-EVENTS [v( d.eco )]=
+	lte( last( get( v( d.edb )/%0 ), | ), secs())
+
+
+
+&TRIG.NOTIFY-UPCOMING-EVENTS [v( d.eco )]=
+	@dolist/inline lattr( v( d.edb )/remindday.* )={ 
+		@if lte( last( get( v( d.edb )/## ), | ), secs())={ 
+
+// .. reminder for players
+			@trigger %!/trig.mail-event-reminder=
+				last( ##, . ), 
+				first( get( v( d.edb )/event.[last( ##, . )] ), | ), 
+				Event Reminder, 
+				You are signed up for;
+
+// .. reminder for ST
+			@trigger %!/trig.mail-event-reminder=
+				last( ##, . ), 
+				first( get( v( d.edb )/event.[last( ##, . )] ), | ), 
+				ST Event Reminder, 
+				You are scheduled to run;
+		}
+	}; 
+
+
+&TRIG.MAIL-EVENT-REMINDER [v( d.eco )]=
+		@trigger %!/trig.mail=
+			%1, 
+			%2, 
+			%3 Event %0 
+			%(
+				[extract( 
+					get( v( d.edb )/event.%0 ), 
+					3, 1, | 
+				)]
+			%) 
+			which will be held on 
+			[convsecs( 
+				last( get( v( d.edb )/event.%0 ), | )
+			)].; 
+
+
+// Filter: `remindday.#` -> It's time to send mail
+&FIL.MAIL.REMIND-TIME [v( d.eco )]=
+	lte( get( v( d.edb )/%0 ), secs())
+
+
+/*
+================================================================================
+
+Set up daily trigger
+
+================================================================================
+*/
+
+// @daily [v( d.eco )]=@trigger %!/TRIG.DAILY
+
+@fo me=&cron_time_events 
+	[search( eobject = [lit( [strmatch( name( ## ), *mushcron* )] )] )]=
+	|||00|05|
+
+@fo me=&cron_job_events 
+	[search( eobject = [lit( [strmatch( name( ## ), *mushcron* )] )] )]=
+	@trigger [v( d.eco )]/TRIG.DAILY
+
+
+/*
+================================================================================
+
+Event/timezone <num>=<timezone>
+
+qz: Timezone, prettified
+
+================================================================================
+*/
+
+&C.EVENT/TIMEZONE [v( d.eco )]=$\+?events?/timezone (.*?)=(.*)$:
+// .. errors
+	@include %!/include.event_is_numeric; 
+	@include %!/include.event_exists; 
+	@include %!/include.user_is_staff_or_owner; 
+	
+	think z: [setr( z, ucstr( %2 ))]; 
+
+// .. change that timezone!
+	@set v( d.edb )=timezone.%1:%qz; 
+	@pemit %#=
+		u( .msg, Events, You set the timezone for Event %1 to %qz. ); 
+	@trigger %!/trig.mail=
+		get( v( d.edb )/signups.%1 ), 
+		Event Timzone Change, 
+		[name( %# )] has changed the timezone of Event %1 
+		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%) 
+		to %qz.; 
+
+@set v( d.eco )/C.EVENT/TIMEZONE=regexp
+
+
+
+/*
+================================================================================
+
+Event/addsum <num>/<title>=<summary>
+    Create different type of summaries (threat, reward, etc.) to event #.
+
+n: number of summary
+t: title of summary
+d: description of summary (or null for erase)
+i: illegal '<attr name>'?
+s: set? (1 if setting, 0 if erasing)
+
+(?s) in pcre: A mode modifier that enables dot-matching the newlines.
+
+================================================================================
+*/
+
+&C.EVENT/ADDSUM [v( d.eco )]=$(?s)^\+?events?/addsum (.*?)=(.*)$:
+
+	think 
+		n: [setr( n, first( %1, / ))]%r
+		t: [setr( t, rest( %1, / ))]%r
+		d: [setr( d, %2 )]%r
+		i: [setr( i, filter( %!/fil.bad_attrname, %qt ))]%r
+		s: [setr( s, comp( %qd, ))]%r
+		summary: summary.%qn.%qt %r; 
+
+// .. errors 
+	@include %!/include.event_is_numeric=%0, %qn; 
+	@include %!/include.event_exists=%0, %qn; 
+	@include %!/include.user_is_staff_or_owner=%0, %qn; 
+
+	@assert not( %qi )={ 
+		@pemit %#=
+			u( .msg, Events, 
+				The summary cannot be set because the 
+				title does not have the appropriate attribute name%; 
+				make sure you are using only one word and no leading numbers. 
+			)
+	}; 
+
+	@assert lte( strlen( %qn ), 11 )={ 
+		@pemit %#=u( .msg, Events, The name for this summary is too long. 
+		Please keep it to at most 11 characters. )
+	}; 
+
+	@assert cor( %qs, hasattr( v( d.edb )/summary.%qn.%qt ))={ 
+		@pemit %#=u( .msg, Events, There already isn't a summary 
+		titled '%qn'%, so you can't unset what isn't there. )
+	}; 
+
+// .. add (or clear!) non-standard summary
+	@pemit %#=
+			u( .mgg, Events, 
+				[if( %qs, Setting, Removing )] 
+				the following summary attribute [if( %qs, to, from )] 
+				Event %qn: %r
+				* [u( .titlestr, %qt )]: [if( %qs, %qd, <removed> )]
+			);
+
+	@set v( d.edb )=summary.%qn.%qt:%qd; 
+
+	@trigger %!/trig.mail=
+		get( v( d.edb )/signups.%qn ), 
+		Event Summary [if( %qs, Addition, Deletion )], 
+		[name( %# )] has [if( %qs, added to, removed from )] 
+		the summary of Event %qn 
+		%([extract( get( v( d.edb )/event.%qn ), 3, 1, | )]%)
+		%r%r
+		[u( .titlestr, %qt )]: [if( %qs, %qd, <removed> )];
+
+@set v( d.eco )/C.EVENT/ADDSUM=regexp
+
+
+/*
+================================================================================
+
+Event/announce <text>
+
+If the game has a Looking For Group channel set up, will announce there.
+
+Set up with &d.events_channel, above.
+
+Requires: Ashcomm.
+
+qc: &d.events_channel
+
+
+
+
+ComSys: Sorry, You do not have permission to do that.
+<Events> You make an announcement to the 'events' channel for all there to see.
+
+
+
+
+================================================================================
+*/
+
+&C.EVENT/ANNOUNCE [v( d.eco )]=$^\+?events?/announce (.+)$:
+	@include %!/include.user_is_staff_or_approved; 
+
+	@assert comp( setr( c, v( d.events_channel )), )={ 
+		@pemit %#=u( .msg, Events, &d.events_channel is empty. 
+		'events/announce' is not set up. )
+	};
+	
+	@assert match( channels(), %qc )={
+		@pemit %#=u( .msg, Events, I want to announce to '%qc', 
+		but can't find that channel here. )
+	}; 
+
+	think cemit( %qc, [ansi( h, Announcement from [moniker(%#)]: )] %1 ); 
+
+// .. can't use %qc here because cemit() softcode function eats %qc.
+	@pemit %#=u( .msg, Events, 
+		You make an announcement to the 
+		'[v( d.events_channel )]' channel for all there to see. 
+	);
+
+
+@set v( d.eco )/C.EVENT/ANNOUNCE=regexp
+
+
+/*
+================================================================================
+
+Filter: Attribute Name
+
+Returns list of invalid attribute names as a check before sending them.
+
+================================================================================
+*/
+
+&FIL.BAD_ATTRNAME [v( d.eco )]=not( valid( attrname, first( %0, = )))
+
+
+
+/*
+================================================================================
+
+Sortby: Event Date
+
+================================================================================
+*/
+
+&SORTBY.EVENT-DATE [v( d.eco )]=
+	comp( 
+		extract( get( v( d.edb )/event.[last( %0, . )] ), 4, 1, | ), 
+		extract( get( v( d.edb )/event.[last( %1, . )] ), 4, 1, | )
+	)
+
+/*
+================================================================================
+
+Events/date: Show all events by date, not number 
+
+================================================================================
+*/
+
+&C.EVENTS/DATE [v( d.eco )]=$^\+?events?/date$:
+	@pemit %#=
+		[u( .header, [u( .mudname )] Current Events )]%r
+		[u( display.events.header )]%r
+		[iter( 
+			edit( 
+				sortby( %!/sortby.event-date, lattr( v( d.edb )/event.* )), 
+				EVENT., 
+			), 
+			u( display.events.one-line, %i0 ), 
+			, %r 
+		)]%r
+		[u( .footer, words( lattr( v( d.edb )/event.* )))]
+
+@set v( d.eco )/C.EVENTS/DATE=regexp
+
+
+/*
+================================================================================
+
+Event/sum: Change the main summary of an event
+
+(?s) in pcre: A mode modifier that enables dot-matching the newlines.
+
+================================================================================
+*/
+
+&C.EVENT/SUM [v( d.eco )]=$(?s)^\+?events?/sum (.*?)=(.*)$:
+
+// .. errors
+	@include %!/include.user_is_staff_or_owner; 
+	@include %!/include.event_is_numeric; 
+	@include %!/include.event_exists; 
+
+// .. change summaries
+	@set v( d.edb )=summary.%1:%2; 
+
+	@pemit %#=
+		u( .msg, Events, 
+			You change the Summary of %1 to %2. 
+			Note this does not remove any summary items added with 
+			Events/addsum! 
+		); 
+
+	@trigger %!/trig.mail=
+		get( v( d.edb )/signups.%1 ), 
+		Event Summary Change, 
+		[name( %# )] has changed the summary of Event %1 
+		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%) to:%r%r
+		%2.; 
+
+@set v( d.eco )/C.EVENT/SUM=regexp
+
+
+/*
+================================================================================
+
+Alaises for 'Event/unsignup'.
+
+================================================================================
+*/
+
+&C.EVENT/LEAVE [v( d.eco )]=$^\+?events?/leave (.*)$:
+	@force %#=event/unsignup %1
+@set v( d.eco )/C.EVENT/LEAVE=regexp
+
+
+&C.EVENT/RESIGN [v( d.eco )]=$^\+?events?/resign (.*)$:
+	@force %#=event/unsignup %1
+@set v( d.eco )/C.EVENT/RESIGN=regexp
+
+
+/*
+================================================================================
+
+Events/mine: Events I've signed up for.
+
+Sorted by date.
+
+================================================================================
+*/
+
+&C.EVENTS/MINE [v( d.eco )]=$^\+?events?/mine$:
+	think 
+		1: [setr( 1, 
+			edit( 
+				filter( fil.signed_up_for, 
+					lattr( v( d.edb )/signups.* ), 
+					, , %# 
+				), 
+				SIGNUPS., 
+			)
+		)] %r
+		2: [setr( 2, 
+			edit( 
+				filter( fil.is_st_for, lattr( v( d.edb )/event.* ), , , %# ), 
+				EVENT., 
+			)
+		)];
+
+	@pemit %#=
+		[u( .header, [name( %# )]'s Current Events )]%r
+		[u( display.events.header )]%r
+		[iter( sortby( sortby.event-date, %q1 %q2 ), 
+			u( display.events.one-line, %i0 ), 
+			, %r 
+		)]%r
+		[u( .footer, 
+			[words( %q1 )] of [words( lattr( v( d.edb )/event.* ))] events 
+		)]
+
+@set v( d.eco )/C.EVENTS/MINE=regexp
+
+
+/*
+================================================================================
+
+Event/mail: Allows owner or staff to mail all the signups.
+
+(?s) in pcre: A mode modifier that enables dot-matching the newlines.
+
+================================================================================
+*/
+
+&C.EVENT/MAIL [v( d.eco )]=$(?s)^\+?events?/mail (.*?)=(.*)$:
+// .. errors
+	@include %!/include.user_is_staff_or_owner; 
+	@assert hasattr( v( d.edb ), signups.%1 )={ 
+		@pemit %#=u( .msg, Events, 
+			Event %1 has no sign-ups to mail%, yet. 
+		)
+	}; 
+	@include %!/include.event_is_numeric; 
+	@include %!/include.event_exists; 
+
+// .. mail some mails!
+	@pemit %#=
+			@mailing 
+			[u( .itemize, 
+				[iter( get( v( d.edb )/signups.%1 ), name( %i0 ), , | )], 
+				| 
+			)] 
+			about Event %1 
+			%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%).; 
+
+	@trigger  %!/trig.mail=
+		get( v( d.edb )/signups.%1 ), 
+		Event %1 - Mail, 
+		[name( %# )] is mailing about Event %1 
+		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%)%r
+		[u( .divider, )]%r
+		%2.; 
+
+@set v( d.eco )/C.EVENT/MAIL=regexp
+
+
+
+/*
+================================================================================
+
+Function: Time
+
+Looks like it formats time strings in a way that can probably be done with a 
+single function in Rhost.
+
+0: event.<num>
+
+t: timestamp
+z: timezone
+
+================================================================================
+*/
+
+&FN.TIME [v( d.eco )]=
+	[setq( t, extract( get( v( d.edb )/%0 ), 4, 1, | ))]
+
+	[if( hasattr( %#, event.hours ), 
+
+// ..set my own timezone
+		[setq( t, 
+			convsecs( add( %qt, mul( 3600, get( %#/event.hours ))))
+		)]
+		[setq( z, get( %#/event.timezone ))], 
+
+// ..use default or event set
+		[setq( t, convsecs( %qt ))]
+		[setq( z, 
+			if( get( v( d.edb )/timezone.[last( %0, . )] ), 
+				get( v( d.edb )/timezone.[last( %0, . )] ), 
+				v( default.timezone )
+			)
+		)]
+	)]
+
+	[u( .ljust, 
+		[u( .ljust, elements( %qt, 1 2 3 ), 10 )] 
+		[elements( elements( %qt, 4 ), 1 2, : )] 
+		[elements( %qt, 5 )], 
+		16 
+	)] 
+	[u( .ljust, %qz, 3 )]
+
+
+
+/*
+================================================================================
+
+Event/st: Events someone is the Storyteller for. (e.g. I'm running)
+
+p: player checking against
+e: events list (filtered by %qp STing)
+
+================================================================================
+*/
+
+&C.EVENT/ST [v( d.eco )]=$^\+?events?/st (.*)$:
+	@assert setr( p, u( .pmatch+, %1 ))={ 
+			@pemit %#=u( .msg, Events, I cannot find %1 as a player. )
+	}; 
+
+	think 
+		qe: [setr( e, 
+				edit( 
+					filter( %!/fil.is_st_for, 
+						lattr( v( d.edb )/event.* ), , , 
+						%qp 
+					), 
+					EVENT., 
+				)
+			)]
+		%r; 
+
+	@pemit %#=
+		[u( .header, Current [u( .mudname )] Events )]%r
+		[u( display.events.header )]%r
+		[iter( sortby( sortby.event-date, %qe ), 
+			u( display.events.one-line, %i0 ), 
+			, %r 
+		)]%r
+		[u( .footer, 
+			[words( %q1 )] of [words( lattr( v( d.edb )/event.* ))] events 
+		)]; 
+
+@set v( d.eco )/C.EVENT/ST=regexp
+
+
+/*
+================================================================================
+
+Filter: Is ST for 
+
+%0: List of 'event.#'
+%1: target dbref for that event
+
+================================================================================
+*/
+
+&FIL.IS_ST_FOR [v( d.eco )]=strmatch( first( get( v( d.edb )/%0 ), | ), %1 )
+
+
+/*
+================================================================================
+
+Filter: Is signed up for 
+
+%0: List of 'event.#'
+%1: target dbref for that event
+
+================================================================================
+*/
+
+&FIL.SIGNED_UP_FOR [v( d.eco )]=t( match( get( v( d.edb )/%0 ), %1 ))
+
+
+/*
+================================================================================
+
+Display: Events Header
+
+================================================================================
+*/
+
+&DISPLAY.EVENTS.HEADER [v( d.eco )]=
+	localize( strcat( 
+		setq( l, max( 3, strlen( get( v( d.edb )/eventtotal )))), 
+		ansi( h, 
+			strcat( 
+				u( .ljust, NUM, %ql ), %b, 
+				u( .ljust, ST, 09 ), %b, 
+				u( .ljust, Genre, 10 ), %b, 
+				u( .ljust, Title, sub( 27, %ql )), %b, 
+				u( .ljust, Date, 24 ), %b, 
+				rjust( Sgnps, 4 ) 
+			)
+		)
+	))
+
+
+
+/*
+================================================================================
+
+Display: Events, One Line
+
+================================================================================
+*/
+
+&DISPLAY.EVENTS.ONE-LINE [v( d.eco )]=
+	localize( strcat( 
+		setq( e, get( v( d.edb )/event.%0 )), 
+		setq( l, strlen( get( v( d.edb )/eventtotal ))), 
+
+//..num
+		u( .ljust, %0, max( 3, %ql )), %b, 
+//..st
+		u( .ljust, moniker( first( %qe, | )), 09 ), %b, 
+//..genre
+		u( .ljust, elements( %qe, 2, | ), 10 ), %b, 
+//..title
+		u( .ljust, elements( %qe, 3, | ), sub( 27, max( 3, %ql ))), %b, 
+//..date
+		u( fn.time, event.%0 ), %b%b, 
+//..signups	
+		rjust( words( get( v( d.edb )/signups.%0 )), 4 )
+	))
+
+
+
+
+
+
+/*
+================================================================================
+
+DO THE DATABASE SETUP DANCE
+
+================================================================================
+*/
+
+@create Events Database <EDB>=10
+@fo me=&d.edb me=[search( name=Events Database <EDB> )]
+
+@wait 0=&EVENTTOTAL Events Database <EDB>=0
+
+// -----------------------------------------------------------------------------
+
+@wait 0=@force me=&D.EDB [v( d.eco )]=[search( name=Events Database <EDB> )]
+@wait 0=@tel Events Database <EDB>=[v( d.eco )]
+
+
+// -----------------------------------------------------------------------------
+
+
+think ansi( y, ------>%b, n, Okay%, Events setup should be done., y, %b<------ )
+think Make sure to add the help file.
+
+@set me=!QUIET
+
+
+
+
+
+/*
+================================================================================
+
+HELP FILE FOLLOWS
+
+Put it where your help files live.
+
+Whomever did this original formatting, it looks nice. Thank you.
+
+
+
+
+
+
+<---======##=================[ Upcoming Events ]==================##======--->
+events                                 List events, sorted by number.
+events/date                            List events, sorted by date.
+events/mine                            Events I signed up for, sorted by date.
+events/st <name>                       Events <name> is running, can be 'me'.
+
+event <#>                              View an event.
+event/signup <#>                       Sign up for an event.
+event/unsignup <#>                     Remove yourself from an event.
+                                       aliases: /leave, /resign
+
+event/create <name>=<date and time>/<genre>/<summary>
+
+    Example format for <date and time>: Mon Jun 19 19:00:00 2021
+    Time zone defaults to &default.timezone on the Events Code Object.
+
+    For 2:00 pm EST, /create with '14:00:00' then /timezone with 'EST'. 
+    Don't include time zone with /create or /date; 
+    It doesn't work right.
+
+event/date <#>=<date and time>         Change date/time of an event.
+event/timezone <#>=<zone>              Change time zone of an event.
+event/name <#>=<name>                  Change name of an event.
+event/genre <#>=<genre>                Change genre of an event.
+event/sum <#>=<description>            Change description of an event.
+event/addsum <#>/<title>=<desc>        Add a new titled summary to the event.
+event/addsum <#>/<title>=              Remove a titled summary from the event.
+event/remove <#>=<player>              Remove participant from an event.
+event/cancel <#>                       Cancel an event.
+event/mail <#>=<text>                  Mail all participants.
+
+event/announce <description> will broadcast <description> to the defined Events Announcement channel. While originally designed for spontaneous scenes, this can also be used to announce that a scheduled event will start soon.
+
+Original code by Cobalt from the TinyMUX/World of Darkness game space.
+<-------------=============++++++++++++++++++++++++=============------------->
+
+*/
