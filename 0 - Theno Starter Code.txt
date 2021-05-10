@@ -325,7 +325,7 @@ Two ways to display information vertically.
                 ), 
                 setq( c, inc( %i0  ))
             ), 
-            , @@  
+            , @@()  
         ), 
         setq( d, if( t( comp( v( %qc ),  )), v( %qc ), %b )), 
         setq( v, v( inc( %qc ))), 
@@ -339,13 +339,13 @@ Two ways to display information vertically.
                     %qd, %qd 
                 )] 
             ), 
-            , @@ 
+            , @@() 
         ), 
         iter( lnum( %qc ), 
             setq( h, 
                 max( %qh, words( rest( r( %i0 ), : ), %qd ))
             ), 
-            , @@ 
+            , @@() 
         ), 
         iter( lnum( 1, %qh ), 
             %ql
