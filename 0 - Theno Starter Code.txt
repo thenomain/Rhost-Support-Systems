@@ -449,29 +449,19 @@ Two ways to display information vertically.
     Removes multiple delimiters from middle, start, and end. 
     e.g., thing1|thing2|||thing4| -> thing1|thing2|thing4
 
-&UFUNC.NUMRANGES [v( d.udf )]=
-    strcat( 
-        setq( o, if( t( %2 ), %2, | )), 
-        setq( n, setunion( %0, , %1, , n )), 
-        setq( l, first( %qn )), 
-        iter( rest( %qn ), 
-            case( 1, 
-                not( isnum( %i0 )), , 
-                eq( %i0, inc( last( last( %ql, %qo )))), 
-                setq( l, 
-                    [extract( %ql, 1, dec( words( %ql, %qo )), %qo )]
-                    [if( dec( words( %ql, %qo )), %qo, )]
-                    [first( last( %ql, %qo ))] 
-                    %i0 
-                ), 
-                setq( l, %ql%qo%i0 )), 
-            , @@ 
-        ), 
-        if( t( %3 ), edit( %ql, %b, %3 ), %ql )
-    )
-&HELP.NUMRANGES [v( d.udf )]=
-    numranges( <list of numbers I think> ): 
-    Can't remember, but apparently helpful.
+&UFUNC.LNUMRANGES [v( d.udf )]=
+	iter( %0, 
+		case( 1, 
+			strmatch( %i0, ?*-?* ), 
+			lnum( first( %i0, - ), rest( %i0, - )), 
+			%i0 
+		)
+	)
+
+&HELP.LNUMRANGES [v( d.udf )]=
+    lnumranges( <list of numbers or num-ranges> ): 
+    e.g., lnumranges( 4 -6 1 blar 10-15 )
+//  (Thanks Myrddin!)
 
 
 // -- PLURAL -------------------------------------------------------------------
