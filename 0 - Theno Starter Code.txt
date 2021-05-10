@@ -27,6 +27,8 @@ game. Designed for TinyMUX.
 If your game setup does not give '@function' access to wizard, change the below 
 to work with your game.
 
+I'M USING @TAG FOR THE FIRST TIME EVER. I HOPE IT WORKS.
+
 If you used the default SGP installation, the following will be true, 
 else fix it:
     #3 is the Storage Wizard
@@ -34,6 +36,7 @@ else fix it:
 */
 
 @create User-Defined Functions <udf>=10
+@tag/add UDF=User-Defined Functions <udf>
 
 // Set the UDF dbref on yourself
 @force me=&d.udf me=[search( object=User-Defined Functions <udf> )]
@@ -174,7 +177,7 @@ Don't make your game without these.
             t( 
                 regmatch( 
                     %i0, 
-                    u( @@USER-DEFINED-FUNCTIONS@@/d.titlestr-regexp )
+                    u( #UDF/d.titlestr-regexp )
                 )
             ), 
             %i0, 
@@ -182,12 +185,12 @@ Don't make your game without these.
             t( 
                 setr( e, 
                     grab( 
-                        u( @@USER-DEFINED-FUNCTIONS@@/d.titlestr-punctuation ), 
+                        u( #UDF/d.titlestr-punctuation ), 
                         escape( right( %i0, 1 ))
                     )
                 )
             ), 
-            [ulocal( @@USER-DEFINED-FUNCTIONS@@/ufunc.titlestr, 
+            [ulocal( #UDF/ufunc.titlestr, 
                 strtrunc( %i0, dec( strlen( %i0 ))), 
                 %1 
             )]
@@ -196,7 +199,7 @@ Don't make your game without these.
             t( 
                 setr( e, 
                     grab( 
-                        [u( @@USER-DEFINED-FUNCTIONS@@/d.titlestr-exception )] 
+                        [u( #UDF/d.titlestr-exception )] 
                         %1, 
                         %i0 
                     )
@@ -207,7 +210,7 @@ Don't make your game without these.
             cand( 
                 t( 
                     match( 
-                        u( @@USER-DEFINED-FUNCTIONS@@/d.titlestr-notitle ), 
+                        u( #UDF/d.titlestr-notitle ), 
                         %i0 
                     )
                 ), 
@@ -218,13 +221,13 @@ Don't make your game without these.
             t( 
                 setr( e, 
                     grab( 
-                        u( @@USER-DEFINED-FUNCTIONS@@/d.titlestr-punctuation ), 
+                        u( #UDF/d.titlestr-punctuation ), 
                         escape( strtrunc( %i0, 1 ))
                     )
                 )
             ), 
             %qe
-            [ulocal( @@USER-DEFINED-FUNCTIONS@@/ufunc.titlestr, 
+            [ulocal( #UDF/ufunc.titlestr, 
                 rest( %i0, %qe ), 
                 %1 
             )], 
@@ -508,7 +511,7 @@ Two ways to display information vertically.
         case( 1, 
             cor( not( strlen( %0 )), strlen( %3 )), 
             #-1 FUNCTION (LPMATCH) EXPECTS BETWEEN 1 AND 3 ARGUMENTS, 
-            strmatch( %1, @@ ), #-1 NO ZERO WIDTH DELIMITERS, 
+            strmatch( %1, ), #-1 NO ZERO WIDTH DELIMITERS, 
             gte( strlen( %1 ), 5 ), #-1 DELIMITER TOO LONG, 
             not( match( |allow|deny, %2*, | )), #-1 ERROR TYPE NOT FOUND, 
             strmatch( %1, " ), 
@@ -538,7 +541,7 @@ Two ways to display information vertically.
 -- Finalize --------------------------------------------------------------------
 */
 
-@fo me=@edit [v( d.udf )]/*=@@USER-DEFINED-FUNCTIONS@@, [v( d.udf )]
+// @fo me=@edit [v( d.udf )]/*=@@USER-DEFINED-FUNCTIONS@@, [v( d.udf )]
 @trigger v( d.udf )/startup
 
 // The Code Object Data Parent, if you're using it.
