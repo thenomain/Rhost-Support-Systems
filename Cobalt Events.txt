@@ -78,6 +78,7 @@ PLEASE CHANGE THESE AS NEEDED
 &.PMATCH+ [v( d.eco )]=if( strmatch( %0, me ), %#, pmatch( %0 ))
 &.LJUST [v( d.eco )]=ljc( %0, %1, %2 )
 &.RJUST [v( d.eco )]=rjc( %0, %1, %2 )
+&.MONIKER [v( d.eco )]=cname( %0 )
 
 
 /*
@@ -840,7 +841,7 @@ ComSys: Sorry, You do not have permission to do that.
 		but can't find that channel here. )
 	}; 
 
-	think cemit( %qc, [ansi( h, Announcement from [moniker(%#)]: )] %1 ); 
+	think cemit( %qc, [ansi( h, Announcement from [u( .moniker, %# )]: )] %1 ); 
 
 // .. can't use %qc here because cemit() softcode function eats %qc.
 	@pemit %#=u( .msg, Events, 
@@ -1203,7 +1204,7 @@ Display: Events, One Line
 //..num
 		u( .ljust, %0, max( 3, %ql )), %b, 
 //..st
-		u( .ljust, moniker( first( %qe, | )), 09 ), %b, 
+		u( .ljust, u( .moniker, first( %qe, | )), 09 ), %b, 
 //..genre
 		u( .ljust, elements( %qe, 2, | ), 10 ), %b, 
 //..title
