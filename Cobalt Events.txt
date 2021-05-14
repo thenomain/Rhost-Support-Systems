@@ -46,7 +46,7 @@ think This is going to be quite a ride...
 
 
 @create Events Command Object <ECO>
-@fo me=&d.eco me=[search( name=@create Events Command Object <ECO> )]
+@fo me=&d.eco me=[search( name=Events Command Object <ECO> )]
 @set Events Command Object <ECO>=inherit safe
 
 
@@ -95,8 +95,8 @@ PLEASE CHANGE THESE AS NEEDED
 
 @ifelse not( isint( get( v( d.eco )/d.bboard.events )))={ 
 	think ansi( r, 
-			<events installer> Well%, I set a place for bboard events 
-			but it's not a real number so you might want to look into that. 
+			<events installer> &d.bboard.events is not a real number. 
+			Please set this to the bboard number to post events to.  
 		)
 	}
 
@@ -169,7 +169,7 @@ Events: List All Events
 		)]%r
 		[u( .footer, words( lattr( v( d.edb )/event.* )))]
 
-@set v( d.eco )/C.EVENTS=regexp
+@set v( d.eco )/C.EVENTS=regex
 
 
 /* 
@@ -236,7 +236,7 @@ The display could probably go in a different "display" attribute, but hey.
 			)
 		)
 
-@set v( d.eco )/C.EVENT_LOOKUP=regexp
+@set v( d.eco )/C.EVENT_LOOKUP=regex
 
 
 /*
@@ -280,7 +280,7 @@ t: time in unix secs
 	@trigger %!/trig.post=%1, %4, [convsecs( %qt )], %q0, %3; 
 
 
-@set v( d.eco )/C.EVENT/CREATE=regexp
+@set v( d.eco )/C.EVENT/CREATE=regex
 
 
 /*
@@ -350,7 +350,7 @@ Event/date <num>=<new date>
 		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%) 
 		to [convsecs( %qt )].; 
 
-@set v( d.eco )/C.EVENT/DATE=regexp
+@set v( d.eco )/C.EVENT/DATE=regex
 
 
 /*
@@ -387,7 +387,7 @@ o: Old Name
 		Event Rename, 
 		[name( %# )] has renamed Event %1 %(%qo%) to '%2'.; 
 
-@set v( d.eco )/C.EVENT/NAME=regexp
+@set v( d.eco )/C.EVENT/NAME=regex
 
 
 /*
@@ -426,7 +426,7 @@ n: Event Name
 		Event Re-Genre-ing, 
 		[name( %# )] has changed the genre of Event %1 %(%qn%) to '%2'.; 
 
-@set v( d.eco )/C.EVENT/GENRE=regexp
+@set v( d.eco )/C.EVENT/GENRE=regex
 
 
 
@@ -464,7 +464,7 @@ Event/signup <num>
 		[name( %# )] has signed up for your Event %1 
 		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%).; 
 
-@set v( d.eco )/C.EVENT/SIGNUP=regexp
+@set v( d.eco )/C.EVENT/SIGNUP=regex
 
 
 /*
@@ -510,7 +510,7 @@ Event/Unsignup <num>
 		[name( %# )] has unsigned up for your Event %1 
 		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%).; 
 
-@set v( d.eco )/C.EVENT/UNSIGNUP=regexp
+@set v( d.eco )/C.EVENT/UNSIGNUP=regex
 
 
 /*
@@ -548,7 +548,7 @@ Event/cancel <num>
 	@pemit %#=u( .msg, Events, You have canceled Event %1. ); 
 
 
-@set v( d.eco )/C.EVENT/CANCEL=regexp
+@set v( d.eco )/C.EVENT/CANCEL=regex
 
 
 /*
@@ -589,7 +589,7 @@ p: dbref of person to remove
 		You have been removed from Event %1 
 		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%).; 
 
-@set v( d.eco )/C.EVENT/REMOVE=regexp
+@set v( d.eco )/C.EVENT/REMOVE=regex
 
 
 /*
@@ -724,7 +724,7 @@ qz: Timezone, prettified
 		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%) 
 		to %qz.; 
 
-@set v( d.eco )/C.EVENT/TIMEZONE=regexp
+@set v( d.eco )/C.EVENT/TIMEZONE=regex
 
 
 
@@ -799,7 +799,7 @@ s: set? (1 if setting, 0 if erasing)
 		%r%r
 		[u( .titlestr, %qt )]: [if( %qs, %qd, <removed> )];
 
-@set v( d.eco )/C.EVENT/ADDSUM=regexp
+@set v( d.eco )/C.EVENT/ADDSUM=regex
 
 
 /*
@@ -849,7 +849,7 @@ ComSys: Sorry, You do not have permission to do that.
 	);
 
 
-@set v( d.eco )/C.EVENT/ANNOUNCE=regexp
+@set v( d.eco )/C.EVENT/ANNOUNCE=regex
 
 
 /*
@@ -902,7 +902,7 @@ Events/date: Show all events by date, not number
 		)]%r
 		[u( .footer, words( lattr( v( d.edb )/event.* )))]
 
-@set v( d.eco )/C.EVENTS/DATE=regexp
+@set v( d.eco )/C.EVENTS/DATE=regex
 
 
 /*
@@ -939,7 +939,7 @@ Event/sum: Change the main summary of an event
 		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%) to:%r%r
 		%2.; 
 
-@set v( d.eco )/C.EVENT/SUM=regexp
+@set v( d.eco )/C.EVENT/SUM=regex
 
 
 /*
@@ -952,12 +952,12 @@ Alaises for 'Event/unsignup'.
 
 &C.EVENT/LEAVE [v( d.eco )]=$^\+?events?/leave (.*)$:
 	@force %#=event/unsignup %1
-@set v( d.eco )/C.EVENT/LEAVE=regexp
+@set v( d.eco )/C.EVENT/LEAVE=regex
 
 
 &C.EVENT/RESIGN [v( d.eco )]=$^\+?events?/resign (.*)$:
 	@force %#=event/unsignup %1
-@set v( d.eco )/C.EVENT/RESIGN=regexp
+@set v( d.eco )/C.EVENT/RESIGN=regex
 
 
 /*
@@ -999,7 +999,7 @@ Sorted by date.
 			[words( %q1 )] of [words( lattr( v( d.edb )/event.* ))] events 
 		)]
 
-@set v( d.eco )/C.EVENTS/MINE=regexp
+@set v( d.eco )/C.EVENTS/MINE=regex
 
 
 /*
@@ -1041,7 +1041,7 @@ Event/mail: Allows owner or staff to mail all the signups.
 		[u( .divider, )]%r
 		%2.; 
 
-@set v( d.eco )/C.EVENT/MAIL=regexp
+@set v( d.eco )/C.EVENT/MAIL=regex
 
 
 
@@ -1131,7 +1131,7 @@ e: events list (filtered by %qp STing)
 			[words( %q1 )] of [words( lattr( v( d.edb )/event.* ))] events 
 		)]; 
 
-@set v( d.eco )/C.EVENT/ST=regexp
+@set v( d.eco )/C.EVENT/ST=regex
 
 
 /*
