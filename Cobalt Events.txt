@@ -13,7 +13,9 @@ REQUIRES:
 - Myrddin's Bboards
 - Ashcomm and a channel for announcements, if using 'event/announce'
 
-This is formatted for Muxify or that other one I wish I could remember.
+This is formatted for Ursamu's Formatter: https://format.ursamu.io
+It is mostly formatted for Muxify: https://muxify.musoapbox.net/editor.html
+	* Any instance of /* in code can break it, tho.
 
 */
 
