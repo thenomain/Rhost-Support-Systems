@@ -254,7 +254,7 @@ t: time in unix secs
 */
 
 &C.EVENT/CREATE [v( d.eco )]=$(?s)^\+?events?/create (.+?)=(.+?)/(.+?)/(.+)$:
-	@include %!/include.user_is_staff_or_approved;
+	@include %!/include.user_is_staff_or_approved; 
 
 	@assert neq( setr( t, convtime( %2 )), -1 )={ 
 		@pemit %#=u( .msg, Events, 
@@ -324,7 +324,7 @@ Event/date <num>=<new date>
 
 // .. errors
 	@include %!/include.user_is_staff_or_owner; 
-	@include %!/include.event_is_numeric;
+	@include %!/include.event_is_numeric; 
 	@include %!/include.event_exists; 
 
 	@assert neq( setr( t, convtime( %2 )), -1 )={ 
@@ -371,12 +371,12 @@ o: Old Name
 
 // .. errors
 	@include %!/include.user_is_staff_or_owner; 
-	@include %!/include.event_is_numeric;
+	@include %!/include.event_is_numeric; 
 	@include %!/include.event_exists; 
 
 	think 
 		e: [setr( e, get( v( d.edb )/event.%1 ))]%r
-		o: [setr( o, elements( %qe, 3, | ))]%r;
+		o: [setr( o, elements( %qe, 3, | ))]%r; 
 
 // set!
 	@set v( d.edb )=event.%1:[replace( %qe, 3, %2, | )]; 
@@ -409,13 +409,13 @@ n: Event Name
 
 // .. errors
 	@include %!/include.user_is_staff_or_owner; 
-	@include %!/include.event_is_numeric;
+	@include %!/include.event_is_numeric; 
 	@include %!/include.event_exists; 
 
 	think 
 		e: [setr( e, get( v( d.edb )/event.%1 ))]%r
 		o: [setr( o, elements( %qe, 2, | ))]%r
-		n: [setr( n, elements( %qe, 3, | ))]%r;
+		n: [setr( n, elements( %qe, 3, | ))]%r; 
 
 // set!
 	@set v( d.edb )=event.%1:[replace( %qe, 2, %2, | )]; 
@@ -455,7 +455,7 @@ Event/signup <num>
 // .. sign me up!
 	@set v( d.edb )=
 		signups.%1:
-		[trim( cat( get( v( d.edb )/signups.%1 ), %# ))];
+		[trim( cat( get( v( d.edb )/signups.%1 ), %# ))]; 
 
 	@pemit %#=u( .msg, Events, 
 		You have been signed up for Event %1. 
@@ -545,8 +545,8 @@ Event/cancel <num>
 		[name( %# )] has canceled Event %1 
 		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%).; 
 
-	@wipe [v( d.edb )]/*.%1;
-	@wipe [v( d.edb )]/*.%1.*;
+	@wipe [v( d.edb )]/*.%1; 
+	@wipe [v( d.edb )]/*.%1.*; 
 
 	@pemit %#=u( .msg, Events, You have canceled Event %1. ); 
 
@@ -645,14 +645,14 @@ Trigger: "Clean" and "Notify". Easier to change later on.
 				last( ##, . ), 
 				first( get( v( d.edb )/event.[last( ##, . )] ), | ), 
 				Event Reminder, 
-				You are signed up for;
+				You are signed up for; 
 
 // .. reminder for ST
 			@trigger %!/trig.mail-event-reminder=
 				last( ##, . ), 
 				first( get( v( d.edb )/event.[last( ##, . )] ), | ), 
 				ST Event Reminder, 
-				You are scheduled to run;
+				You are scheduled to run; 
 		}
 	}; 
 
@@ -789,7 +789,7 @@ s: set? (1 if setting, 0 if erasing)
 				the following summary attribute [if( %qs, to, from )] 
 				Event %qn: %r
 				* [u( .titlestr, %qt )]: [if( %qs, %qd, <removed> )]
-			);
+			); 
 
 	@set v( d.edb )=summary.%qn.%qt:%qd; 
 
@@ -800,7 +800,7 @@ s: set? (1 if setting, 0 if erasing)
 		the summary of Event %qn 
 		%([extract( get( v( d.edb )/event.%qn ), 3, 1, | )]%)
 		%r%r
-		[u( .titlestr, %qt )]: [if( %qs, %qd, <removed> )];
+		[u( .titlestr, %qt )]: [if( %qs, %qd, <removed> )]; 
 
 @set v( d.eco )/C.EVENT/ADDSUM=regex
 
@@ -836,7 +836,7 @@ ComSys: Sorry, You do not have permission to do that.
 	@assert comp( setr( c, v( d.events_channel )), )={ 
 		@pemit %#=u( .msg, Events, &d.events_channel is empty. 
 		'events/announce' is not set up. )
-	};
+	}; 
 	
 	@assert match( channels(), %qc )={
 		@pemit %#=u( .msg, Events, I want to announce to '%qc', 
@@ -849,7 +849,7 @@ ComSys: Sorry, You do not have permission to do that.
 	@pemit %#=u( .msg, Events, 
 		You make an announcement to the 
 		'[v( d.events_channel )]' channel for all there to see. 
-	);
+	); 
 
 
 @set v( d.eco )/C.EVENT/ANNOUNCE=regex
@@ -989,7 +989,7 @@ Sorted by date.
 				filter( fil.is_st_for, lattr( v( d.edb )/event.* ), , , %# ), 
 				EVENT., 
 			)
-		)];
+		)]; 
 
 	@pemit %#=
 		[u( .header, [name( %# )]'s Current Events )]%r
