@@ -478,8 +478,10 @@ Trigger: Send a quick mail with the quick mail system.
 ================================================================================
 */
 
+&TRIG.MAIL [v( d.eco )]=mail %0=%1//%2
+
+// from the Mux system..
 // &TRIG.MAIL [v( d.eco )]=@mail/quick %0/%1=%2
-TRIG.MAIL [v( d.eco )]=mail %0=%1//%2
 
 
 /*
