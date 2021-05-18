@@ -145,10 +145,10 @@ Includes: Code that gets used over and over and over and aiiigh!
 	@assert 
 		cor( 
 			u( .isstaff, %# ), 
-			strmatch( first( get( v( d.edb )/event.%0 ), | ), %# )
+			strmatch( first( get( v( d.edb )/event.%1 ), | ), %# )
 		)={ 
 			@pemit %#=u( .msg, Events, 
-				Only [name( first( get( v( d.edb )/event.%0 ), | ))] or Staff 
+				Only [name( first( get( v( d.edb )/event.%1 ), | ))] or Staff 
 				can use this command. 
 			)
 		}; 
@@ -527,16 +527,7 @@ Event/cancel <num>
 &C.EVENT/CANCEL [v( d.eco )]=$^\+?events?/cancel (.*)$:
 	@include %!/include.event_is_numeric; 
 	@include %!/include.event_exists; 
-
-	@assert cor( 
-			u( .isstaff, %# ), 
-			strmatch( first( get( v( d.edb )/event.%1 ), | ), %# )
-		)={ 
-			@pemit %#=u( .msg, Events, 
-				Only [name( first( get( v( d.edb )/event.%1 ), | ))] 
-				or Staff can cancel this event.
- 			)
-		};  
+	@include %!/include.user_is_staff_or_owner; 
 
 // .. cancel this event!
 	@trigger %!/trig.mail=
