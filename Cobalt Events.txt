@@ -212,16 +212,28 @@ The display could probably go in a different "display" attribute, but hey.
 
 
 &C.EVENT_LOOKUP [v( d.eco )]=$^\+?events? (.*)$:
-// ..errors
+//..errors
 	@include %!/include.event_is_numeric; 
 	@include %!/include.event_exists; 
 
-// ..show event
+//..set all the registers
+	think strcat( 
+			event:, setr( e, get( v( d.edb )/event.%1 )), %r, 
+			other summaries:, setr( o, lattr( v( d.edb )/summary.%1.* )), %r, 
+
+			all signups:, setr( a, get( v( d.edb )/signups.%1 )), %r, 
+			limit:, 
+				setr( l, if( setr( l, get( v( d.edb )/limit.%1 )), %ql, 9999 )), 
+			%r, 
+			signups:, setr( u, extract( %qa, 1, %ql )), %r, 
+			waitlist:, setr( w, extract( %qa, inc( %ql ), 9999 )), %r, 
+		); 
+
+//..show event
 	@pemit %#=
 		strcat( 
-			setq( e, get( v( d.edb )/event.%1 )), 
-			setq( s, lattr( v( d.edb )/summary.%1.* )), 
 
+// (core info)
 			u( .header, 
 				Event %1 - 
 				[extract( %qe, 3, 1, | )]
@@ -233,33 +245,46 @@ The display could probably go in a different "display" attribute, but hey.
 			ansi( h, Storyteller ), :%b, name( first( %qe, | )), %r, 
 			ansi( h, Genre ), :%b, extract( %qe, 2, 1, | ), 
 
-			if( t( %qs ), %r ), 
-			iter( %qs, 
+// (other summaries)
+			if( t( %qo ), 
 				strcat( 
-					ansi( h, capstr( lcstr( last( %i0, . )))), 
-					:%b, 
-					get( v( d.edb )/%i0 )
-				), 
-				, %r 
+					%r, 
+					iter( %qo, 
+						strcat( 
+							ansi( h, 
+								u( .titlestr, edit( last( %i0, . ), _, %b ))
+							), 
+							:%b, 
+							get( v( d.edb )/%i0 )
+						), 
+						, %r 
+					), 
+				)
 			), 
-
 			%r%r, 
 
-			ansi( h, Signups ), :, %b, 
-			u( .itemize,  
-				iter( get( v( d.edb )/signups.%1 ), 
-					name( %i0 ), 
-					, | 
-				), 
-				| 
-			), %r, 
+// (signups)
+			ansi( h, Signups ), 
+			if( neq( %ql, 9999 ), %b%([u( .plural, %ql, slot, slots, 1 )]%)), 
+			:, %b, 
+			u( fn.dbrefs-to-names, %qu ), %r, 
 
+// (waitlist)
+			if( neq( %ql, 9999 ), 
+				strcat( 
+					ansi( h, Waitlist ), :, %b, 
+					u( fn.dbrefs-to-names, %qw ), %r
+				)				
+			), 
+
+// (footer)
 			u( .footer, 
 				strcat( 
 					Event %1:, %b, 
 					extract( %qe, 3, 1, | ), %b, -, %b, 
 					trim( u( fn.time, event.%1 )), %b, -, %b, 
-					words( get( v( d.edb )/signups.%1 ))
+					words( get( v( d.edb )/signups.%1 )), 
+					if( neq( %ql, 9999 ), /%ql )
 				)
 			)
 		)
@@ -541,6 +566,61 @@ Event/Unsignup <num>
 		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%).; 
 
 @set v( d.eco )/C.EVENT/UNSIGNUP=regex
+
+
+/*
+================================================================================
+
+Event/limit <num>
+
+================================================================================
+*/
+
+&C.EVENT/LIMIT [v( d.eco )]=$^\+?events?/limit (.*?)=(.*)$:
+// ..errors
+	@include %!/include.event_is_numeric; 
+	@include %!/include.event_exists; 
+	@include %!/include.user_is_staff_or_owner; 
+
+	@assert cor( not( comp( %2, )), cand( isint( %2 ), gt( %2, 0 )))={ 
+		@pemit %#=u( .msg, Events, 
+			You may only limit the participants to an event to a positive 
+			number%, or nothing to clear it.
+		)
+	}; 
+
+	@assert lte( %2, 99 )={ 
+		@pemit %#=u( .msg, Events, 
+			You may limit events to at most 99 signups. 
+			Because formatting. 
+			C'mon. 
+		)
+	}; 
+
+	@assert not( eq( get( v( d.edb )/limit.%1 ), %2 ))={ 
+		@pemit %#=u( .msg, Events, 
+			Event %1 already is already limited to [if( t(%2), %2, unlimited )] 
+			signups. 
+		)
+	}; 
+
+// ..make it happen
+	@set [v( d.edb )]=limit.%1:%2; 
+	@pemit %#=u( .msg, Events, 
+			You've limited Event %1 to [if( t(%2), %2, unlimited )] 
+			[u( .plural, %2, signup, signups )]. 
+		); 
+
+	@trigger %!/trig.mail=
+		get( v( d.edb )/signups.%1 ), 
+		Event Signup Limit, 
+		[name( %# )] has changed the limit of Event %1 
+		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%) 
+		to [if( t(%2), %2, unlimited )] signups. Please check 'event %1' 
+		as this may affect your ability to participate in the event.; 
+
+
+@set v( d.eco )/C.EVENT/LIMIT=regex
 
 
 /*
@@ -1213,26 +1293,35 @@ Display: Events Header
 
 Display: Events, One Line
 
+e: 'event.<num>' attribute
+t: total number of events 
+l: limit (max participants)
+
 ================================================================================
 */
 
 &DISPLAY.EVENTS.ONE-LINE [v( d.eco )]=
 	localize( strcat( 
 		setq( e, get( v( d.edb )/event.%0 )), 
-		setq( l, strlen( get( v( d.edb )/eventtotal ))), 
+		setq( t, max( 3, strlen( get( v( d.edb )/eventtotal )))), 
+		setq( l, get( v( d.edb )/limit.%0 )), 
 
 //..num
-		u( .ljust, %0, max( 3, %ql )), %b, 
+		u( .ljust, %0, %qt ), %b%b, 
 //..st
-		u( .ljust, u( .moniker, first( %qe, | )), 09 ), %b, 
+		u( .ljust, u( .moniker, first( %qe, | )), 9 ), %b%b, 
 //..genre
-		u( .ljust, elements( %qe, 2, | ), 10 ), %b, 
+		u( .ljust, elements( %qe, 2, | ), 10 ), %b%b, 
 //..title
-		u( .ljust, elements( %qe, 3, | ), sub( 27, max( 3, %ql ))), %b, 
+		u( .ljust, elements( %qe, 3, | ), sub( 27, %qt )), %b%b, 
 //..date
 		u( fn.time, event.%0 ), %b%b, 
-//..signups	
-		rjust( words( get( v( d.edb )/signups.%0 )), 4 )
+//..signups
+		rjust( 
+			[words( get( v( d.edb )/signups.%0 ))]
+			[if( neq( %ql, 0 ), /%ql )], 
+			5 
+		)
 	))
 
 
@@ -1312,6 +1401,10 @@ event/genre <#>=<genre>                Change genre of an event.
 event/sum <#>=<description>            Change description of an event.
 event/addsum <#>/<title>=<desc>        Add a new titled summary to the event.
 event/addsum <#>/<title>=              Remove a titled summary from the event.
+
+event/limit <#>=<max participants>     How many people can the event run.
+                                       (Overflow players can still sign up.)
+event/limit <#>=                       Remove the limit of max participants.
 event/remove <#>=<player>              Remove participant from an event.
 event/cancel <#>                       Cancel an event.
 event/mail <#>=<text>                  Mail all participants.
