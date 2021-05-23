@@ -221,12 +221,10 @@ The display could probably go in a different "display" attribute, but hey.
 			event:, setr( e, get( v( d.edb )/event.%1 )), %r, 
 			other summaries:, setr( o, lattr( v( d.edb )/summary.%1.* )), %r, 
 
-			all signups:, setr( a, get( v( d.edb )/signups.%1 )), %r, 
-			limit:, 
-				setr( l, if( setr( l, get( v( d.edb )/limit.%1 )), %ql, 9999 )), 
-			%r, 
-			signups:, setr( u, extract( %qa, 1, %ql )), %r, 
-			waitlist:, setr( w, extract( %qa, inc( %ql ), 9999 )), %r, 
+			signups:, setr( s, u( fn.get-signups, %1 )), %r, 
+			limit:, setr( l, last( %qs, | )), %r, 
+			signups:, setr( u, first( %qs, | )), %r, 
+			waitlist:, setr( w, elements( %qs, 2, | )), %r, 
 		); 
 
 //..show event
@@ -482,6 +480,97 @@ n: Event Name
 @set v( d.eco )/C.EVENT/GENRE=regex
 
 
+/*
+================================================================================
+
+Function: Get Signups
+
+0: event #
+Returns:
+	<active signups>|<waitlist>|<limit>
+
+================================================================================
+*/
+
+&FN.GET-SIGNUPS [v( d.eco )]=
+	localize( strcat( 
+		setq( s, get( v( d.edb )/signups.%0 )), 
+		setq( l, default( v( d.edb )/limit.%0, 9999 )), 
+		extract( %qs, 1, %ql ), 
+		|, 
+		extract( %qs, inc( %ql ), 9999 ), 
+		|, 
+		%ql 
+	))
+
+
+/*
+================================================================================
+
+Function: Waitlisted?
+
+Sees if someone would be waitlisted if they signed up for Event %0.
+
+Returns: 1 if yes, 0 if no
+
+================================================================================
+*/
+
+&FN.WAITLISTED?.SIGNUP [v( d.eco )]=
+	localize( 
+		cand( 
+			t( setr( l, get( v( d.edb )/limit.%0 ))), 
+			gte( 
+				words( get( v( d.edb )/signups.%0 )), 
+				%ql 
+			)
+		)
+	)
+
+
+/*
+================================================================================
+
+Function: Calculate all the dbrefs that go from 'waitlist' to 'active' signups.
+
+	u( fn.signups.remove, <event#>, <dbref(s) to remove> )
+
+returns:
+	<new signups list>|<anyone who is new to the 'active' list>
+
+s: fn.get-signups
+o: original active signups
+w: original waitlist
+l: limit
+
+n: new signups list -> listdiff( original signups, %1 )
+
+a: new 'active' signups -> limit of new signups
+m: dbrefs new to the 'active' signups -> setinter( new actives, old waitlist )
+
+--
+
+think ldelete( a b c d e, iter( b d, match( a b c d e, %i0 )))
+think listdiff( a b c d e, b d ))
+
+================================================================================
+*/
+
+&FN.SIGNUPS.REMOVE [v( d.eco )]=
+	localize( strcat( 
+		setq( s, u( fn.get-signups, %0 )), 
+		setq( o, first( %qs, | )), 
+		setq( w, elements( %qs, 2, | )), 
+		setq( l, last( %qs, | )), 
+
+		setq( n, listdiff( %qo %qw, %1 )), 
+
+		setq( a, extract( %qn, 1, %ql )), 
+		setq( m, setinter( %qa, %qw )), 
+		
+		%qn|%qm
+	))
+
 
 /*
 ================================================================================
@@ -502,20 +591,33 @@ Event/signup <num>
 		)
 	}; 
 
-// .. sign me up!
+// .. add to signup
 	@set v( d.edb )=
 		signups.%1:
 		[trim( cat( get( v( d.edb )/signups.%1 ), %# ))]; 
 
+// .. waitlisted?
+	think strcat( 
+		waitlisted?:, setr( w, u( fn.waitlisted?.signup, %1 )), %r, 
+	); 
+
+// .. notifications
 	@pemit %#=u( .msg, Events, 
-		You have been signed up for Event %1. 
+		if( %qw, 
+			You are currently on the waitlist for Event %1. 
+			You should be informed when this opens up%, 
+			but keep your eyes open., 
+
+			You have been signed up for Event %1. 
+		)
 	); 
 
 	@trigger %!/trig.mail=
 		first( get( v( d.edb )/event.%1 ), | ), 
 		New Event Signup, 
 		[name( %# )] has signed up for your Event %1 
-		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%).; 
+		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%). 
+		[if( %qw, They have been waitlisted. )]; 
 
 @set v( d.eco )/C.EVENT/SIGNUP=regex
 
@@ -1352,7 +1454,8 @@ l: limit (max participants)
 	localize( strcat( 
 		setq( e, get( v( d.edb )/event.%0 )), 
 		setq( t, max( 3, strlen( get( v( d.edb )/eventtotal )))), 
-		setq( l, get( v( d.edb )/limit.%0 )), 
+		setq( s, u( fn.get-signups, %0 )), 
+		setq( l, last( %qs, | )), 
 
 //..num
 		u( .ljust, %0, %qt ), %b%b, 
@@ -1366,7 +1469,7 @@ l: limit (max participants)
 		u( fn.time, event.%0 ), %b%b, 
 //..signups
 		rjust( 
-			[words( get( v( d.edb )/signups.%0 ))]
+			[words( elements( %qs, 1 2, | ), | )]
 			[if( neq( %ql, 0 ), /%ql )], 
 			5 
 		)
