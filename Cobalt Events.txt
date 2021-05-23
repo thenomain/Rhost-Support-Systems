@@ -72,6 +72,12 @@ PLEASE CHANGE THESE AS NEEDED
 &.DIVIDER [v( d.eco )]=divider( %0 )
 &.TITLESTR [v( d.eco )]=iter( %0, capstr( lcstr( %i0 )))
 
+// u( .plural, <count>, <sing>, <plur>, <prepend?> )
+&.plural [v( d.eco )]=if( eq( %0, 1 ), 
+		if( %3, %0 %1, %1 ), 
+		if( %3, %0 %2, %2 )
+	)
+
 &.MSG [v( d.eco )]=ansi( r, >%b, h, %0, r, %b<%b, n, %1 )
 &.MUDNAME [v( d.eco )]=mudname()
 
