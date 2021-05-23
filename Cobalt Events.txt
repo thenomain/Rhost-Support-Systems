@@ -73,7 +73,7 @@ PLEASE CHANGE THESE AS NEEDED
 &.TITLESTR [v( d.eco )]=iter( %0, capstr( lcstr( %i0 )))
 
 // u( .plural, <count>, <sing>, <plur>, <prepend?> )
-&.plural [v( d.eco )]=if( eq( %0, 1 ), 
+&.PLURAL [v( d.eco )]=if( eq( %0, 1 ), 
 		if( %3, %0 %1, %1 ), 
 		if( %3, %0 %2, %2 )
 	)
