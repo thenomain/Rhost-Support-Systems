@@ -273,8 +273,8 @@ The display could probably go in a different "display" attribute, but hey.
 			if( neq( %ql, 9999 ), 
 				strcat( 
 					ansi( h, Waitlist ), :, %b, 
-					u( fn.dbrefs-to-names, %qw ), %r
-				)				
+					u( fn.dbrefs-to-names, %qw ), %r 
+				)
 			), 
 
 // (footer)
