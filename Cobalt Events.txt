@@ -1162,6 +1162,48 @@ z: timezone
 ================================================================================
 */
 
+// Working on timezone conversions. Store as GMT, 
+// then convert back to specific timezone when needed.
+
+// Converts server secs() -> UTC secs()
+&.SECS.UTC [v( d.eco )]=sub( secs(), timefmt( $I, secs())) 
+
+
+// Gives offset from UTC for timezone %0
+// 0: timezone abbr
+&FN.TIMEZONE.OFFSET [v( d.eco )]=timefmt( $I, secs(), %0 )
+
+// 0: Seconds in UTC
+// 1: My Timezone
+&FN.TIMEZONE.UTC-TO-TIMEZONE [v( d.eco )]=add( %0, u( fn.timezone.offset, %1 ))
+
+// 0: My Timezone
+&FN.TIMEZONE.VALID? [v( d.eco )]=not( comp( timefmt($i,secs(),%0), N/A )
+
+/*
+
+LOCAL-SECONDS UTC-OFFSET
+think [secs()] [timefmt($I, secs())]
+
+&signup-tz.*.local: 1621373185 -21600
+
+So if I store seconds as UTC, I need to know seconds in timezone intended. That timezone may have shifted from DST.
+So I need to convert it to Stored TZ.
+Then slap on Server TZ.
+Without changing Seconds.
+And that's just to adjust to intended date/time
+Then I can slam it back to UTC and let any other TZ calculations take place.
+I've probably added more steps than needed, but this is the overall effect.
+
+For fuck's sake.
+
+This can wait.
+
+*/
+
+
+// -------------------------------------------
+
 &FN.TIME [v( d.eco )]=
 	[setq( t, extract( get( v( d.edb )/%0 ), 4, 1, | ))]
 
@@ -1183,14 +1225,20 @@ z: timezone
 		)]
 	)]
 
+//	[u( format.time, %qt, %qz )]
+	[u( format.time.compressed, convtime( %qt ), %qz )]
+
+&format.time [v( d.eco )]=
 	[u( .ljust, 
-		[u( .ljust, elements( %qt, 1 2 3 ), 10 )] 
-		[elements( elements( %qt, 4 ), 1 2, : )] 
-		[elements( %qt, 5 )], 
+		[u( .ljust, elements( %0, 1 2 3 ), 10 )] 
+		[elements( elements( %0, 4 ), 1 2, : )] 
+		[elements( %0, 5 )], 
 		16 
 	)] 
-	[u( .ljust, %qz, 3 )]
+	[u( .ljust, %1, 3 )]
 
+&format.time.compressed [v( d.eco )]=
+	[timefmt( $a $[2]E/$[02]D $[02]h:$[02]T, %0 )] [u( .ljust, %1, 3 )]
 
 
 /*
@@ -1276,12 +1324,12 @@ Display: Events Header
 		setq( l, max( 3, strlen( get( v( d.edb )/eventtotal )))), 
 		ansi( h, 
 			strcat( 
-				u( .ljust, NUM, %ql ), %b, 
-				u( .ljust, ST, 09 ), %b, 
-				u( .ljust, Genre, 10 ), %b, 
-				u( .ljust, Title, sub( 27, %ql )), %b, 
-				u( .ljust, Date, 24 ), %b, 
-				rjust( Sgnps, 4 ) 
+				u( .ljust, NUM, %ql ), %b%b, 
+				u( .ljust, ST, 09 ), %b%b, 
+				u( .ljust, Genre, 10 ), %b%b, 
+				u( .ljust, Title, sub( 27, %ql )), %b%b, 
+				u( .ljust, Date, 19 ), %b%b, 
+				rjust( Sgnps, 5 ) 
 			)
 		)
 	))
@@ -1390,9 +1438,8 @@ event/create <name>=<date and time>/<genre>/<summary>
     Example format for <date and time>: Mon Jun 19 19:00:00 2021
     Time zone defaults to &default.timezone on the Events Code Object.
 
-    For 2:00 pm EST, /create with '14:00:00' then /timezone with 'EST'. 
-    Don't include time zone with /create or /date; 
-    It doesn't work right.
+    For 2:00 pm EST, /create or /date with '14:00:00', 
+    then /timezone with 'EST'. 
 
 event/date <#>=<date and time>         Change date/time of an event.
 event/timezone <#>=<zone>              Change time zone of an event.
