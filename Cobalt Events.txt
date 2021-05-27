@@ -1470,7 +1470,7 @@ l: limit (max participants)
 //..signups
 		rjust( 
 			[words( elements( %qs, 1 2, | ), | )]
-			[if( neq( %ql, 0 ), /%ql )], 
+			[if( neq( %ql, 9999 ), /%ql )], 
 			5 
 		)
 	))
