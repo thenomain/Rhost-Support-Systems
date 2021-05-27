@@ -397,7 +397,7 @@ Event/date <num>=<new date>
 
 	@trigger %!/trig.mail=
 		get( v( d.edb )/signups.%1 ), 
-		Event Reschedule, 
+		Event %1: Reschedule, 
 		[name( %# )] has rescheduled Event %1 
 		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%) 
 		to [convsecs( %qt )].; 
@@ -436,7 +436,7 @@ o: Old Name
 
 	@trigger %!/trig.mail=
 		get( v( d.edb )/signups.%1 ), 
-		Event Rename, 
+		Event %1: Renamed, 
 		[name( %# )] has renamed Event %1 %(%qo%) to '%2'.; 
 
 @set v( d.eco )/C.EVENT/NAME=regex
@@ -475,7 +475,7 @@ n: Event Name
 
 	@trigger %!/trig.mail=
 		get( v( d.edb )/signups.%1 ), 
-		Event Re-Genre-ing, 
+		Event %1: Re-Genred, 
 		[name( %# )] has changed the genre of Event %1 %(%qn%) to '%2'.; 
 
 @set v( d.eco )/C.EVENT/GENRE=regex
@@ -615,7 +615,7 @@ Event/signup <num>
 
 	@trigger %!/trig.mail=
 		first( get( v( d.edb )/event.%1 ), | ), 
-		New Event Signup, 
+		Event %1: New Signup, 
 		[name( %# )] has signed up for your Event %1 
 		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%). 
 		[if( %qw, They have been waitlisted. )]; 
@@ -669,7 +669,7 @@ Event/Unsignup <num>
 
 	@trigger %!/trig.mail=
 		first( get( v( d.edb )/event.%1 ), | ), 
-		New Event Cancellation, 
+		Event %1: Cancellation, 
 		[name( %# )] has unsigned up for your Event %1 
 		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%).; 
 
@@ -731,7 +731,7 @@ Event/limit <num>
 
 	@trigger %!/trig.mail=
 		get( v( d.edb )/signups.%1 ), 
-		Event Signup Limit, 
+		Event %1: Signup Limit Change, 
 		[name( %# )] has changed the limit of Event %1 
 		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%) 
 		to [if( t(%2), %2, unlimited )] signups. Please check 'event %1' 
@@ -757,7 +757,7 @@ Event/cancel <num>
 // .. cancel this event!
 	@trigger %!/trig.mail=
 		get( v( d.edb )/signups.%1 ), 
-		Event Cancellation, 
+		Event %1: Canceled, 
 		[name( %# )] has canceled Event %1 
 		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%).; 
 
@@ -810,7 +810,7 @@ p: dbref of person to remove
 
 	@trigger %!/trig.mail=
 		%qp, 
-		Event Removal, 
+		Event %1: Removal, 
 		You have been removed from Event %1 
 		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%).; 
 
