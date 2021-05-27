@@ -1473,7 +1473,7 @@ l: limit (max participants)
 		u( fn.time, event.%0 ), %b%b, 
 //..signups
 		rjust( 
-			[words( u( .elements, %qs, 1 2, | ), | )]
+			[words( edit( u( .elements, %qs, 1 2, |, | ), |, %b ))]
 			[if( neq( %ql, 9999 ), /%ql )], 
 			5 
 		)
