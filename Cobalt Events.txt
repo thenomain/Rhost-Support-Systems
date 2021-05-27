@@ -1569,6 +1569,8 @@ event/signup <#>                       Sign up for an event.
 event/unsignup <#>                     Remove yourself from an event.
                                        aliases: /leave, /resign
 
+Signing up for an event with max participants (see /limit, below) may put you on a waitlist. People on a waitlist may still be able to participate, depending on the event runner. Regardless, if a cancelation or removal puts you on the active list, you will be notified by @mail.
+
 event/create <name>=<date and time>/<genre>/<summary>
 
     Example format for <date and time>: Mon Jun 19 19:00:00 2021
