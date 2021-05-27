@@ -87,6 +87,7 @@ PLEASE CHANGE THESE AS NEEDED
 &.LJUST [v( d.eco )]=ljc( %0, %1, %2 )
 &.RJUST [v( d.eco )]=rjc( %0, %1, %2 )
 &.MONIKER [v( d.eco )]=cname( %0 )
+&.ELEMENTS [v( d.eco )]=elementsmux( %0, %1, %2, %3 )
 
 
 /*
@@ -224,7 +225,7 @@ The display could probably go in a different "display" attribute, but hey.
 			signups:, setr( s, u( fn.get-signups, %1 )), %r, 
 			limit:, setr( l, last( %qs, | )), %r, 
 			signups:, setr( u, first( %qs, | )), %r, 
-			waitlist:, setr( w, elements( %qs, 2, | )), %r, 
+			waitlist:, setr( w, u( .elements, %qs, 2, | )), %r, 
 		); 
 
 //..show event
@@ -424,7 +425,7 @@ o: Old Name
 
 	think 
 		e: [setr( e, get( v( d.edb )/event.%1 ))]%r
-		o: [setr( o, elements( %qe, 3, | ))]%r; 
+		o: [setr( o, u( .elements, %qe, 3, | ))]%r; 
 
 // set!
 	@set v( d.edb )=event.%1:[replace( %qe, 3, %2, | )]; 
@@ -462,8 +463,8 @@ n: Event Name
 
 	think 
 		e: [setr( e, get( v( d.edb )/event.%1 ))]%r
-		o: [setr( o, elements( %qe, 2, | ))]%r
-		n: [setr( n, elements( %qe, 3, | ))]%r; 
+		o: [setr( o, u( .elements, %qe, 2, | ))]%r
+		n: [setr( n, u( .elements, %qe, 3, | ))]%r; 
 
 // set!
 	@set v( d.edb )=event.%1:[replace( %qe, 2, %2, | )]; 
@@ -560,7 +561,7 @@ think listdiff( a b c d e, b d ))
 	localize( strcat( 
 		setq( s, u( fn.get-signups, %0 )), 
 		setq( o, first( %qs, | )), 
-		setq( w, elements( %qs, 2, | )), 
+		setq( w, u( .elements, %qs, 2, | )), 
 		setq( l, last( %qs, | )), 
 
 		setq( n, listdiff( %qo %qw, %1 )), 
@@ -1332,9 +1333,9 @@ This can wait.
 
 &format.time [v( d.eco )]=
 	[u( .ljust, 
-		[u( .ljust, elements( %0, 1 2 3 ), 10 )] 
-		[elements( elements( %0, 4 ), 1 2, : )] 
-		[elements( %0, 5 )], 
+		[u( .ljust, u( .elements, %0, 1 2 3 ), 10 )] 
+		[u( .elements, u( .elements, %0, 4 ), 1 2, : )] 
+		[u( .elements, %0, 5 )], 
 		16 
 	)] 
 	[u( .ljust, %1, 3 )]
@@ -1462,14 +1463,14 @@ l: limit (max participants)
 //..st
 		u( .ljust, u( .moniker, first( %qe, | )), 9 ), %b%b, 
 //..genre
-		u( .ljust, elements( %qe, 2, | ), 10 ), %b%b, 
+		u( .ljust, u( .elements, %qe, 2, | ), 10 ), %b%b, 
 //..title
-		u( .ljust, elements( %qe, 3, | ), sub( 27, %qt )), %b%b, 
+		u( .ljust, u( .elements, %qe, 3, | ), sub( 27, %qt )), %b%b, 
 //..date
 		u( fn.time, event.%0 ), %b%b, 
 //..signups
 		rjust( 
-			[words( elements( %qs, 1 2, | ), | )]
+			[words( u( .elements, %qs, 1 2, | ), | )]
 			[if( neq( %ql, 9999 ), /%ql )], 
 			5 
 		)
