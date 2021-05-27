@@ -642,7 +642,6 @@ Trigger: Send a quick mail with the quick mail system.
 
 Event/Unsignup <num>
 
-
 ================================================================================
 */
 
@@ -651,15 +650,20 @@ Event/Unsignup <num>
 	@include %!/include.event_is_numeric; 
 	@include %!/include.event_exists; 
 
-	think 
-		s: [setr( s, get( v( d.edb )/signups.%1 ))]; 
-
-	@assert t( grab( %qs, %# ))={ 
-		@pemit %#=u( .msg, Events, You aren't signed up for Event %1. ) 
+	@assert member( get( v( d.edb )/signups.%1 ), %# ))={ 
+		@pemit %#=u( .msg, Events, You already aren't signed up for Event %1. ) 
 	}; 
 
+// .. set some registers
+	think 
+		strcat( 
+			signups.remove:, setr( r, u( fn.signups.remove, %1, %# )), %r, 
+			new signup attr:, setr( n, first( %qr, | )), %r, 
+			mail new active signups:, setr( m, rest( %qr, | )), %r, 
+		); 
+
 // .. unsign me up!
-	@set v( d.edb )=signups.%1:[setdiff( %qs, %# )]; 
+	@set v( d.edb )=signups.%1:%qn; 
 
 	@pemit %#=u( .msg, Events, You have been removed from Event %1. ); 
 
@@ -668,6 +672,16 @@ Event/Unsignup <num>
 		New Event Cancellation, 
 		[name( %# )] has unsigned up for your Event %1 
 		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%).; 
+
+// .. mail new active signups
+	@if words( %qm )={ 
+		@trigger %!/trig.mail=
+			%qm, 
+			Event %1: Moved From Waitlist to Particiants, 
+			You have become an active participant of Event %1 
+			%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%).; 
+	}; 
+
 
 @set v( d.eco )/C.EVENT/UNSIGNUP=regex
 
@@ -768,23 +782,29 @@ p: dbref of person to remove
 
 &C.EVENT/REMOVE [v( d.eco )]=$^\+?events?/remove (.+?)=(.+)$:
 // .. who?
-	think p: [setr( p, pmatch( %2 ))]; 
+	think pmatch: [setr( p, pmatch( %2 ))]; 
 
 // .. errors
 	@include %!/include.user_is_staff_or_owner; 
 	@include %!/include.event_is_numeric; 
 	@include %!/include.event_exists; 
 
-	think s: [setr( s, get( v( d.edb )/signups.%1 ))]; 
-
-	@assert t( grab( %qs, %qp ))={ 
-		@pemit %#=u( .msg, Events,  
-			[name( %qp )] is not signed up for Event %1. 
-		)
+	@assert member( get( v( d.edb )/signups.%1 ), %# ))={ 
+		@pemit %#=u( .msg, Events, 
+			[name( %qp )] is already not signed up for Event %1. 
+		) 
 	}; 
 
-// .. remove someone from the event!
-	@set v( d.edb )=signups.%1:[setdiff( %qs, %qp )]; 
+// .. set some registers
+	think 
+		strcat( 
+			signups.remove:, setr( r, u( fn.signups.remove, %1, %qp )), %r, 
+			new signup attr:, setr( n, first( %qr, | )), %r, 
+			mail new active signups:, setr( m, rest( %qr, | )), %r, 
+		); 
+
+// .. unsign them up!
+	@set v( d.edb )=signups.%1:%qn; 
 
 	@pemit %#=u( .msg, Events, You've removed [name( %qp )] from Event %1. ); 
 
@@ -793,6 +813,15 @@ p: dbref of person to remove
 		Event Removal, 
 		You have been removed from Event %1 
 		%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%).; 
+
+// .. mail new active signups
+	@if words( %qm )={ 
+		@trigger %!/trig.mail=
+			%qm, 
+			Event %1: Moved From Waitlist to Particiants, 
+			You have become an active participant of Event %1 
+			%([extract( get( v( d.edb )/event.%1 ), 3, 1, | )]%).; 
+	}; 
 
 @set v( d.eco )/C.EVENT/REMOVE=regex
 
