@@ -870,20 +870,40 @@ Trigger: "Clean" and "Notify". Easier to change later on.
 &TRIG.NOTIFY-UPCOMING-EVENTS [v( d.eco )]=
 	@dolist/inline lattr( v( d.edb )/remindday.* )={ 
 		@if lte( last( get( v( d.edb )/## ), | ), secs())={ 
+			think strcat( 
+				event num:, setr( e, last( ##, . )), %r, 
+				signups:, setr( s, u( fn.get-signups, %qe )), %r, 
+				active:, setr( a, first( %qs, | )), %r, 
+				waitlist:, setr( w, u( .elements, %qs, 2, |, | )), %r, 
+			); 
 
-// .. reminder for players
+// .. reminder for participating players
 			@trigger %!/trig.mail-event-reminder=
-				last( ##, . ), 
-				first( get( v( d.edb )/event.[last( ##, . )] ), | ), 
-				Event Reminder, 
+				%qe, 
+// .. .. get active participants below
+				%qa, 
+				Event %qe: Participant Reminder, 
 				You are signed up for; 
+
+// .. reminder for waitlisted players
+			@trigger %!/trig.mail-event-reminder=
+				%qe, 
+// .. .. get waitlisted players below
+				%qw, 
+				Event %qe: Waitlist Reminder, 
+				You are on the waitlist for, 
+				The event runner may allow more participants closer to the 
+				event time.; 
 
 // .. reminder for ST
 			@trigger %!/trig.mail-event-reminder=
-				last( ##, . ), 
+				%qe, 
 				first( get( v( d.edb )/event.[last( ##, . )] ), | ), 
-				ST Event Reminder, 
-				You are scheduled to run; 
+				Event %qe: ST Reminder, 
+				You are scheduled to run, 
+				if( gt( words( %qw ), 0 ), 
+					There are [words( %qw )] people on the waitlist. 
+				); 
 		}
 	}; 
 
@@ -902,7 +922,8 @@ Trigger: "Clean" and "Notify". Easier to change later on.
 			which will be held on 
 			[convsecs( 
 				last( get( v( d.edb )/event.%0 ), | )
-			)].; 
+			)]. 
+			[if( strlen( %4 ), %r%r%4 )]; 
 
 
 // Filter: `remindday.#` -> It's time to send mail
