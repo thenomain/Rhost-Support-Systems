@@ -225,7 +225,7 @@ The display could probably go in a different "display" attribute, but hey.
 			signups:, setr( s, u( fn.get-signups, %1 )), %r, 
 			limit:, setr( l, last( %qs, | )), %r, 
 			signups:, setr( u, first( %qs, | )), %r, 
-			waitlist:, setr( w, u( .elements, %qs, 2, | )), %r, 
+			waitlist:, setr( w, u( .elements, %qs, 2, |, | )), %r, 
 		); 
 
 //..show event
@@ -425,7 +425,7 @@ o: Old Name
 
 	think 
 		e: [setr( e, get( v( d.edb )/event.%1 ))]%r
-		o: [setr( o, u( .elements, %qe, 3, | ))]%r; 
+		o: [setr( o, u( .elements, %qe, 3, |, | ))]%r; 
 
 // set!
 	@set v( d.edb )=event.%1:[replace( %qe, 3, %2, | )]; 
@@ -463,8 +463,8 @@ n: Event Name
 
 	think 
 		e: [setr( e, get( v( d.edb )/event.%1 ))]%r
-		o: [setr( o, u( .elements, %qe, 2, | ))]%r
-		n: [setr( n, u( .elements, %qe, 3, | ))]%r; 
+		o: [setr( o, u( .elements, %qe, 2, |, | ))]%r
+		n: [setr( n, u( .elements, %qe, 3, |, | ))]%r; 
 
 // set!
 	@set v( d.edb )=event.%1:[replace( %qe, 2, %2, | )]; 
@@ -561,7 +561,7 @@ think listdiff( a b c d e, b d ))
 	localize( strcat( 
 		setq( s, u( fn.get-signups, %0 )), 
 		setq( o, first( %qs, | )), 
-		setq( w, u( .elements, %qs, 2, | )), 
+		setq( w, u( .elements, %qs, 2, |, | )), 
 		setq( l, last( %qs, | )), 
 
 		setq( n, listdiff( %qo %qw, %1 )), 
@@ -1466,9 +1466,9 @@ l: limit (max participants)
 //..st
 		u( .ljust, u( .moniker, first( %qe, | )), 9 ), %b%b, 
 //..genre
-		u( .ljust, u( .elements, %qe, 2, | ), 10 ), %b%b, 
+		u( .ljust, u( .elements, %qe, 2, |, | ), 10 ), %b%b, 
 //..title
-		u( .ljust, u( .elements, %qe, 3, | ), sub( 27, %qt )), %b%b, 
+		u( .ljust, u( .elements, %qe, 3, |, | ), sub( 27, %qt )), %b%b, 
 //..date
 		u( fn.time, event.%0 ), %b%b, 
 //..signups
