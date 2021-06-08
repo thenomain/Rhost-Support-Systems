@@ -88,6 +88,27 @@ RHOST doesn't do NAWS from Telnet, so let's find people's width.
 
 /*
 --------------------------------------------------------------------------------
+-- Cross-Platform Compatibility ------------------------------------------------
+
+It might be strange to see this in the "Rhost Starter Code", but I would like 
+this code to be starter code for multiple platforms, as it would make it easier 
+for installers and for me to port code.
+
+*/
+
+// rhost: @@(), else: @@ 
+@switch/first version()=
+	RhostMUSH*, { &.null [v( d.udf )]=lit(@@( )) }, 
+	{ &.null [v( d.udf )]=@@ }
+
+// rhost: mwords(), else: words()
+@switch/first version()=
+	RhostMUSH*, { &.words [v( d.udf )]=lit(mwords( %0, %1 )) }, 
+	{ &.words [v( d.udf )]=lit(words( %0, %1 )) }
+
+
+/*
+--------------------------------------------------------------------------------
 -- Critical Functions ----------------------------------------------------------
 
 Don't make your game without these.
@@ -545,7 +566,10 @@ Two ways to display information vertically.
 -- Finalize --------------------------------------------------------------------
 */
 
-// @fo me=@edit [v( d.udf )]/*=@@USER-DEFINED-FUNCTIONS@@, [v( d.udf )]
+@switch/first version()=
+	RhostMUSH*, { @@ do nothing }, 
+	{ @fo me=@edit [v( d.udf )]/*=#UDF, [v( d.udf )] }
+
 @trigger v( d.udf )/startup
 
 // The Code Object Data Parent, if you're using it.
