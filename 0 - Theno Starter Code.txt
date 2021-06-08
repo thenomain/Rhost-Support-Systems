@@ -328,67 +328,205 @@ Don't make your game without these.
 
 /*
 --------------------------------------------------------------------------------
--- Vcolumns & Vtable -----------------------------------------------------------
+-- Vcolumns --------------------------------------------------------------------
 
 Two ways to display information vertically.
     vcolums() -- Thenomain
     vtable()  -- Chime
 
+(These should be rewritten if/when printf() handles UTF-8.)
+
+--
+
+vcolumns( <width1>:<list1>, ..., <delim>, <divider>, <left>, <right> )
+
+e.g.:
+think vcolumns( 14:this`is`a`really kind of annoying test bla, 10:, `, %b|%b )
+
+
+Due to limitations in Mu* code, the only way to separate <width> from <list> 
+is with a pre-defined delimiter for this only. I'm sticking with :.
+
+Max columns is 9, 8 if delim, 7 if divider, 6 if left, 5 if right.
+
+--
+
+Here's some fun tests:
+
+think vcolumns( 5:this is an test, 20:this is another test that we're going to test things out on, , | )
+
+think vcolumns( 5:this`````is a test, 20:this`is another test that we're going to test things out`on, `, %b|%b )
+--
+
+input:
+
+	0-9: input, hopefully at least one columns
+
+registers:
+	0-9: columns
+	d: delimiter
+	i: divider character(s)
+	l: left character(s)
+	r: right character(s)
+
+	c: number of columns
+	h: height
+
 */
 
 &UFUNC.VCOLUMNS [v( d.udf )]=
-    strcat( 
-        iter( lnum( 9 ), 
-            if( 
-                cand( 
-                    isint( before( v( %i0 ), : )), 
-                    strmatch( v( %i0  ), *:* )
-                ), 
-                setq( c, inc( %i0  ))
-            ), 
-            , @@()  
-        ), 
-        setq( d, if( t( comp( v( %qc ),  )), v( %qc ), %b )), 
-        setq( v, v( inc( %qc ))), 
-        setq( l, v( add( %qc, 2 ))), 
-        setq( r, v( add( %qc, 3 ))), 
-        iter( lnum( %qc ), 
-            setq( %i0, 
-                [setr( w, first( v( %i0 ), : ))]:
-                [iter( rest( v( %i0 ), : ), 
-                    wrap( %i0, %qw, left, , , , %qd ), 
-                    %qd, %qd 
-                )] 
-            ), 
-            , @@() 
-        ), 
-        iter( lnum( %qc ), 
-            setq( h, 
-                max( %qh, words( rest( r( %i0 ), : ), %qd ))
-            ), 
-            , @@() 
-        ), 
-        iter( lnum( 1, %qh ), 
-            %ql
-            [iter( lnum( %qc ), 
-                if( 
-                    t( 
-                        setr( z, 
-                            extract( rest( r( %i0 ), : ), inum( 1 ), 1, %qd )
-                        )
-                    ), 
-                    %qz, 
-                    space( first( r( %i0 ), : ))
-                ), 
-                , %qv 
-            )]
-            %qr, 
-            , %r 
-        )
-    )
+//.. it's possible to have no properly defined columns, so error out then
+	if( 
+		not( cand( 
+			strmatch( %0, *:* ), 
+			isint( before( %0, : ))
+		)), 
+		#-1 MUST START WITH ONE VALID COLUMN, 
+
+//.. continue
+		strcat( 
+//.. this next section determines how many arguments are column definitions
+//.. 9 registers only - %0 to %9
+			iter( lnum( 9 ), 
+				if( 
+//.. c: if %<num> is "<width>:*", # of columns = <num>+1
+					cand( 
+						isint( before( v( %i0 ), : )), 
+						strmatch( v( %i0 ), *:* )
+					), 
+					setq( c, inc( %i0 ))
+				), 
+				, u(#UDF/.null)
+			), 
+/*
+    at this this point, %qc will be 1 to 9
+    which will be the 'next' argument, since arguments are 0-offset
+    so for vcolumns( 10:test, 10:another test, , | )
+    "10:test" is '%0' and has 1 column
+    "10:another" test is '%1' and has 2 columns
+    delimiter would be in '%2', which is also the number of columns
+    so delimiter would always be set at 'v( %qc )'
+*/
+
+//.. d: delimiter, v: column seperator, l: left, r: right
+			setq( d, if( comp( v( %qc ), ), v( %qc ))), 
+			setq( v, v( inc( %qc ))), 
+			setq( l, v( add( %qc, 2 ))), 
+			setq( r, v( add( %qc, 3 ))), 
+
+//.. for each column .. q0-q9: <width>:<formatted text>, w: width
+			iter( lnum( %qc ), 
+				setq( %i0, 
+					[setr( w, first( v( %i0 ), : ))]:
+					[wrap( edit( rest( v( %i0 ), : ), %qd, %r ), %qw, left )] 
+				), 
+				, u(#UDF/.null)
+			), 
+
+//.. h: height of the tallest column
+			iter( lnum( %qc ), 
+				setq( h, 
+					max( %qh, u( #UDF/.words, rest( r( %i0 ), : ), %r ))
+				), 
+				, u(#UDF/.null) 
+			), 
+
+//.. 'from 1 to height do:'
+			iter( lnum( 1, %qh ), 
+//.. (left decoration)
+				%ql
+//.. 'for each column do:'
+				[iter( lnum( %qc ), 
+//.. if current column has something in it, display that
+					if( 
+						strlen( 
+							setr( z, 
+								elements( 
+									rest( r( %i0 ), : ), 
+									inum(1),           // what row are we on?
+									mid( %r, 1, 1 )    // strip CR from CRLF
+								)
+							)
+						), 
+						%qz, 
+//.. else, put as many spaces as column width
+						space( first( r( %i0 ), : ))
+					), 
+//.. (between-column decoration)
+					, %qv 
+				)]
+//.. (right decoration)
+				%qr, 
+				, %r 
+			)
+		)
+	)
+
 &HELP.VCOLUMNS [v( d.udf )]=See in-depth help file.
 
-// --
+/*
+VCOLUMNS HELP
+
+vcolumns() creates vertical columns of text with a specified width for each.
+
+USAGE:
+    vcolumns(
+        <width 1>:<text 1>
+        [..., <width n>:<text n>]
+        [, <delimiter>
+        [, <divider char(s)>
+        [, <left char(s)>
+        [, <right char(s)>]]]]
+    )
+
+e.g.
+    vcolumns( 14:this`is`a`a test for how this works etc etc, 10:, `, %b|%b )
+
+It may also have optional ornamentation of any or all of the following: between each column, on the left of each line, on the right of each line.
+
+These options are positional, meaning if you choose to have any of the following, you must at least leave an empty option for any that come before it. 
+
+    <delimiter>       : Creates a newline break within that column.
+    <divider char(s)> : Character(s) between columns.
+    <left char(s)>    : Character(s) to the left of each line.
+    <right char(s)>   : Character(s) to the right of each line.
+
+e.g., using the divider decoration but without a delimiter:
+    vcolumns( 14:let's make this column a bunch of text here, 10:, , %b|%b )
+
+LIMITATIONS:
+* vcolumns() can only take up to 9 arguments, even if you are using delimiter or 
+  decorations.
+* This means you can have at most 5 columns if you're using the <right char(s)>
+  decoration.
+
+*/
+
+
+/*
+--------------------------------------------------------------------------------
+-- Vtable ----------------------------------------------------------------------
+
+Two ways to display information vertically.
+    vcolums() -- Thenomain
+    vtable()  -- Chime
+
+(These should be rewritten if/when printf() handles UTF-8.)
+
+--
+
+	vtable( <items to display>, ???? )
+
+vtable() is like vcolumns() but it automatically calculates the best width to make sure every column in the table is the same, across the total width of the player's screen as reported by width().
+
+e.g.
+	think vtable( this_is a pretty_decent_test to have for this )
+
+
+d: delimiter (defaults 'space')
+c: count of words
+
+*/
 
 &UFUNC.VTABLE [v( d.udf )]=
     strcat( 
@@ -437,6 +575,15 @@ Two ways to display information vertically.
         )
     )
 &HELP.VTABLE [v( d.udf )]=See in-depth help file.
+
+/*
+VTABLE HELP
+
+There should be a complex vcolumns help.
+
+I use this for my Code Object Data Parent.
+
+*/
 
 &UFUNC.TRANSPOSE [v( d.udf )]=
     iter( 
