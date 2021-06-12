@@ -12,23 +12,6 @@ Mushlikes that are eventually based on the TinyMUSH softcode architecture,
 please let me know or use the formatting here to make your own.
 
 
-================================================================================
-== SETTING UP EXECSCRIPT =======================================================
-
-This should go in its own HOWTO file or the like. I like execscript as an 
-Rhostism, and anyone using Rhost should look into it.
-
-Execscript doesn't work in macOS 11 (Big Sur) or later. They know.
-
-It should be: 
-macOS: ln -s /usr/local/bin/gtimeout /path/to/Server/bin/timeout
-*/
-
-@power/councilor me=execscript
-@set me=sidefx
-
-
-/*
 ################################################################################
 ## USER-DEFINED FUNCTIONS <UDF> ################################################
 
