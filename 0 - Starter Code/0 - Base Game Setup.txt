@@ -128,8 +128,9 @@ rhost: cname()
 elsewhere: moniker()
 
 */
+
 @switch/first version()=
-	RhostMUSH*, { &.moniker [v( d.udf )]=lit(moniker( %0 )) }, 
+	RhostMUSH*, { &.moniker [v( d.udf )]=lit(cname( %0 )) }, 
 	{ &.moniker [v( d.udf )]=lit(moniker( %0 )) }
 
 
