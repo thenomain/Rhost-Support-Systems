@@ -1,0 +1,61 @@
+/*
+================================================================================
+== shortdesc() =================================================================
+
+A "shortdesc" is a summary description players can set on their characters for 
+quick-look commands.
+
+I coded this one specifically because we had a game where the shortdesc could 
+different for different people (seeing someone's true form, e.g.)
+
+That part isn't complete, but the rest should be working.
+
+*/
+
+&UFUNC/PRIVILEGED.SHORTDESC [v( d.udf )]=
+    case( 1, 
+        cand( 
+            hasattr( 
+                setr( 0, 
+//.. pmatch() has limitations with 'me' and 'here'
+                    case( %0, 
+                        me, %#, 
+                        here, loc( %# ), 
+                        pmatch( %0 )
+                    )
+                ), 
+                short-mien 
+            ), 
+            hastxlevel( %q0, HEDGE ), 
+            cor( 
+                hasrxlevel( %#, HEDGE ), 
+                hasrxlevel( %#, ALL ), 
+                strmatch( parent( room( %# )), << hedge parent >> )
+            )
+        ), 
+        get( %q0/short-mien ), 
+
+        hasattr( %q0, short-desc ), get( %q0/short-desc ), 
+
+        match( %0, %# ), 
+        ansi( xh, %(Use &short-desc me=text to set this%) ), 
+
+        @@( show nothing - %q0 - %# )
+    )
+
+&HELP.SHORTDESC [v( d.udf )]=
+    shortdesc( <target> ): 
+    Shows the most appropriate '&short-desc' attribute the viewer can see. 
+    (Some holding code in there for reality levels.)
+
+
+
+
+
+/* 
+--------------------------------------------------------------------------------
+-- cleanup ---------------------------------------------------------------------
+*/
+
+@trigger v( d.udf )/startup
+

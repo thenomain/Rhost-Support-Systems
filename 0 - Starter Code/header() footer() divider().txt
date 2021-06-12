@@ -1,0 +1,119 @@
+/*
+================================================================================
+== Headers/Footers/Dividers ====================================================
+
+Before, after, or in-between outputs. This can be much more complex, with a 
+template system or different outputs for different systems, but for unification 
+start here.
+
+
+--------------------------------------------------------------------------------
+-- Header ----------------------------------------------------------------------
+
+At the top, always with text.
+
+*/
+
+&UFUNC.HEADER [v( d.udf )]=
+	printf( 
+		$^
+			[if( cand( isint( %1 ), gt( %1, 1 )), %1, 79 )]
+			:[ansi( c, %<058> )]:
+		s, 
+		ansi( c, ., h, %b %0 %b, c, . )
+	)
+&HELP.HEADER [v( d.udf )]=
+    header( <text> ): 
+    A game-wide output header.
+
+
+
+/*
+--------------------------------------------------------------------------------
+-- Divider ---------------------------------------------------------------------
+
+In the middle, optional text near the left.
+(fprint: - : left justify
+
+*/
+
+&UFUNC.DIVIDER [v( d.udf )]=
+	printf( 
+		$-
+			[if( cand( isint( %1 ), gt( %1, 1 )), %1, 79 )]
+			:[ansi( c, . )]:
+		s, 
+		if( strlen( %0 ),
+			ansi( c, ..:, h, %b %0 %b, c, : )
+		)
+	)
+&HELP.DIVIDER [v( d.udf )]=
+    divider( [<text>] ): 
+    A game-wide output divider.
+
+
+/*
+--------------------------------------------------------------------------------
+-- Footer ----------------------------------------------------------------------
+
+At the bottom, optional text near the right.
+(fprint: right justify by default)
+
+*/
+
+&UFUNC.FOOTER [v( d.udf )]=
+	printf( 
+		$
+			[if( cand( isint( %1 ), gt( %1, 1 )), %1, 79 )]
+			:[ansi( c, %<058> )]:
+		s, 
+		if( strlen( %0 ),
+			ansi( c, ., h, %b %0 %b, c, .:: )
+		)
+	)
+&HELP.FOOTER [v( d.udf )]=
+    footer( [<text>] ): 
+    A game-wide output footer.
+
+
+/*
+--------------------------------------------------------------------------------
+-- Footer ----------------------------------------------------------------------
+
+"w" prefix means "to the width of the person reading it"
+for those of us with 180 character-wide client windows. 
+
+Requires: width()
+
+
+*/
+
+@if not( comp( width(), lit(width())))={ 
+		think ansi( hr, 
+			>> width() doesn't exist%, so wheader() etc. won't work correctly 
+		) 
+	}
+
+&UFUNC.WHEADER [v( d.udf )]=header( %0, width( %# ))
+&HELP.WHEADER [v( d.udf )]=
+    wheader( <text> ): 
+    A game-wide output header as wide as the user's screen.
+
+&UFUNC.WDIVIDER [v( d.udf )]=divider( %0, width( %# ))
+&HELP.WDIVIDER [v( d.udf )]=
+    wdivider( [<text>] ): 
+    A game-wide output divider as wide as the user's screen.
+
+&UFUNC.WFOOTER [v( d.udf )]=footer( %0, width( %# ))
+&HELP.WFOOTER [v( d.udf )]=
+    wfooter( [<text>] ): 
+    A game-wide output footer as wide as the user's screen.
+
+
+
+/* 
+--------------------------------------------------------------------------------
+-- cleanup ---------------------------------------------------------------------
+*/
+
+@trigger u( d.udf )/startup

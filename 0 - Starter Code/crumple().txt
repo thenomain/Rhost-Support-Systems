@@ -1,0 +1,26 @@
+/*
+================================================================================
+== crumple() ===================================================================
+
+Does what it says in the help.crumple.
+
+I ended up with so many occasions of lists like '||a||||b||c|' that I made this.
+
+*/
+
+&UFUNC.CRUMPLE [v( d.udf )]=trim( squish( %0, %1 ), b, %1 )
+
+&HELP.CRUMPLE [v( d.udf )]=
+    crumple( <list of items>[, <delimiter>] ): 
+    Removes multiple delimiters from middle, start, and end. 
+    e.g., thing1|thing2|||thing4| -> thing1|thing2|thing4
+
+
+
+/* 
+--------------------------------------------------------------------------------
+-- cleanup ---------------------------------------------------------------------
+*/
+
+@trigger v( d.udf )/startup
+

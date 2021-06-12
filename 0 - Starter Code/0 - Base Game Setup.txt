@@ -1,0 +1,160 @@
+/*
+STARTMUSH FUNCTIONS, RHOST EDITION
+
+The goal of these functions is to fill in some gaps that I believe every game 
+should have on-hand. Most of these have to do with formatting and unification. 
+Some are functions that are so handy that I use them a lot. Some I think should 
+be in the hardcoded functions.
+
+Though this file says "Rhost Edition", I will be trying to make these code sets 
+available to TinyMUX as well. If there is interest in Penn or Tiny, or any other 
+Mushlikes that are eventually based on the TinyMUSH softcode architecture, 
+please let me know or use the formatting here to make your own.
+
+
+================================================================================
+== SETTING UP EXECSCRIPT =======================================================
+
+This should go in its own HOWTO file or the like. I like execscript as an 
+Rhostism, and anyone using Rhost should look into it.
+
+Execscript doesn't work in macOS 11 (Big Sur) or later. They know.
+
+It should be: 
+macOS: ln -s /usr/local/bin/gtimeout /path/to/Server/bin/timeout
+*/
+
+@power/councilor me=execscript
+@set me=sidefx
+
+
+/*
+################################################################################
+## USER-DEFINED FUNCTIONS <UDF> ################################################
+
+I prefer to have a singular object that all the game functions will be called 
+from.
+
+These are non-specific helper functions. Functions specific to other systems 
+should be set on those objects, or see your code wizard if the game is set up in 
+a different manner.
+
+Formatting:
+	UFUNC.<functionname>: Uses /preserve. Always use /preserve.
+	UFUNC/PRIVILEGED.<functionname>: Gives the function wiz-ish powers.
+
+	D.<name>: Data. Call via 'get( #UDF/D.<name> )'
+	F.<name>: Function. Call via 'u( #UDF/F.<name> )'
+
+
+================================================================================
+== SETUP =======================================================================
+
+If your game setup does not give '@function' access to wizard, change the below 
+to work with your game.
+
+*/
+
+@create User-Defined Functions <udf>
+
+// Rhost: Add UDF as a #tag.
+@switch/first first( version())=
+	RhostMUSH*, { @tag/add UDF=User-Defined Functions <udf> }
+
+// Set the UDF dbref on yourself
+@force me=&d.udf me=[search( object=User-Defined Functions <udf> )]
+
+// On game startup, set all the functions on the object.
+@startup [v( d.udf )]=
+    @dolist lattr( %!/ufunc.* )={ 
+        @function/preserve [rest( ##, . )]=%!/##
+    }; 
+
+    @dolist lattr( %!/ufunc/privileged.* )={ 
+        @function/privileged/preserve [rest( ##, . )]=%!/##
+    }; 
+
+// The Code Object Data Parent, if you're using it.
+@force me=@parent [v( d.udf )]=
+    [search( object=Code Object Data Parent <codp> )]
+
+
+
+/*
+================================================================================
+== Cross-Platform Compatibility ================================================
+
+It might be strange to see this in the "Rhost Starter Code", but I would like 
+this code to be starter code for multiple platforms, as it would make it easier 
+for installers and for me to port code.
+
+--------------------------------------------------------------------------------
+-- .null -----------------------------------------------------------------------
+
+What do we use as a null delimiter?
+
+rhost: @@()
+elsewhere: @@ 
+
+*/
+
+@switch/first version()=
+	RhostMUSH*, { &.null [v( d.udf )]=lit(@@()) }, 
+	{ &.null [v( d.udf )]=@@ }
+
+/*
+--------------------------------------------------------------------------------
+-- .words ----------------------------------------------------------------------
+
+We sometimes want to use %r as a delimiter for counting words.
+
+rhost: mwords()
+elsewhere: words()
+
+*/
+
+@switch/first version()=
+	RhostMUSH*, { &.words [v( d.udf )]=lit(mwords( %0, %1 )) }, 
+	{ &.words [v( d.udf )]=lit(words( %0, %1 )) }
+
+
+/*
+--------------------------------------------------------------------------------
+-- .moniker --------------------------------------------------------------------
+
+What is the full colorized version of someone's name?
+
+rhost: cname()
+elsewhere: moniker()
+
+*/
+@switch/first version()=
+	RhostMUSH*, { &.moniker [v( d.udf )]=lit(moniker( %0 )) }, 
+	{ &.moniker [v( d.udf )]=lit(moniker( %0 )) }
+
+
+
+/*
+================================================================================
+== Finalize & Clean Up =========================================================
+
+I like not owning half the code on a game, so I want to move it over to any code 
+holder object.
+
+If you're using SGP, Storage Wizard is #3.
+
+
+@force me=&d.udf #3=[search( object=User-Defined Functions <udf> )]
+@chown User-Defined Functions <udf>=#3
+@set User-Defined Functions <udf>=inherit !halt safe
+
+--
+
+On non-RHOST games, make sure #UDF is pointed at the right dbref:
+*/
+
+@switch/first version()=
+	RhostMUSH*, { @@ do nothing }, 
+	{ @fo me=@edit [v( d.udf )]/*=#UDF, [v( d.udf )] }
+
+@trigger v( d.udf )/startup

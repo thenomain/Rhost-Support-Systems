@@ -1,0 +1,96 @@
+/*
+================================================================================
+== lpmatch() ===================================================================
+
+*****************************
+** Might not work anymore. **
+*****************************
+
+Sometimes you just want a list of character names to become a list of dbrefs.
+
+I added a delimiter in response to games that wouldn't support character names 
+with spaces in them. Even the login screen allows you to type "A Name In 
+Quotes", so why can't softcode?
+
+-- 
+
+0: list of names
+   "thenomain" "donkey blues"
+   thenomain, donkey blues
+1: input delimiter, " for name-in-quotes
+2: type : null, "allow" or "deny"
+   allow: Allow the list to go through if there are any not-found people
+   deny:  Deny the list to go through if there are any not-found people.
+   (This might be backwards.)
+
+*/
+
+&UFUNC.LPMATCH [v( d.udf )]=
+// build the list
+    [setq( e, 
+        case( 1, 
+            cor( not( strlen( %0 )), strlen( %3 )), 
+            #-1 FUNCTION (LPMATCH) EXPECTS BETWEEN 1 AND 3 ARGUMENTS, 
+
+            strmatch( %1, ), 
+            #-1 NO ZERO WIDTH DELIMITERS, 
+
+            gte( strlen( %1 ), 5 ), 
+            #-1 DELIMITER TOO LONG, 
+
+            not( match( |allow|deny, %2*, | )), 
+            #-1 MATCH TYPE NOT FOUND, 
+
+            strmatch( %1, " ), 
+            squish( trim( 
+            	iter( %0, 
+            		if( mod( inum( 0 ), 2 ), 
+            			iter( %i0, 
+            				if( setr( p, pmatch( %i0 )), %qp, #-1 %i0 ), 
+            				, | 
+            			), 
+            			if( setr( p, pmatch( %i0 )), %qp, #-1 %i0 )), 
+            		", | 
+            	), 
+            b, | ), | ), 
+
+            iter( %0, 
+                if( setr( p, pmatch( trim( %i0 ))), 
+                    %qp, 
+                    #-1 [trim( %i0 )] 
+                ), 
+                %1, | 
+            )
+        )
+    )]
+
+    [switch( 1, 
+//.. the list is an error
+        not( t( %qe )), %qe, 
+
+//.. do something different if using 'deny' and there's a Not Found in the list
+        cand( strmatch( %qe, *#-1* ), strmatch( %2, d* )), 
+        #-1 NOT FOUND|[iter( graball( %qe, #-1 *, | ), rest( %i0 ), |, | )], 
+
+//.. else just give the list as-is (default)
+        %qe 
+    )]
+
+
+&HELP.LPMATCH [v( d.udf )]=
+    lpmatch( ??? ): 
+    A way to turn a list of player names into player dbrefs.
+
+
+
+/* 
+--------------------------------------------------------------------------------
+-- cleanup ---------------------------------------------------------------------
+*/
+
+@switch/first version()=
+	RhostMUSH*, { @@ do nothing }, 
+	{ @fo me=@edit [v( d.udf )]/*=#UDF, [v( d.udf )] }
+
+@trigger v( d.udf )/startup
+

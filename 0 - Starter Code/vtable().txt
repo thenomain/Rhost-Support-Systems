@@ -1,0 +1,162 @@
+/*
+================================================================================
+== vtable() ====================================================================
+
+Two ways to display information vertically.
+    vcolums() -- Thenomain
+    vtable()  -- Chime
+
+(These should be rewritten if/when printf() handles UTF-8.)
+
+--
+
+	vtable( <items to display>, <#cols>, <delim>, <divider>, <fill> )
+
+vtable() is like vcolumns() but it automatically calculates the best width to 
+make sure every column in the table is the same, across the total width of the 
+player's screen as reported by width().
+
+e.g.
+	think vtable( this_is a pretty_decent_test to have for this )
+
+0: text
+1: column count [default: calculated]
+2: delimiter [default: space]
+3: column divider [default: space]
+4: fill [default: space]
+
+d: delimiter (%2, default space)
+c: word count
+w: width of a column
+x: columns (%1, default calculated)
+y: rows
+
+p: fill (%4, default space)
+s: column divider (%3, default space)
+
+--
+
+think vtable( this_is a pretty_decent_test to have for vtable, , , %b|%b )
+
+*/
+
+&UFUNC.VTABLE [v( d.udf )]=
+    strcat( 
+// d: delimiter (default space)
+        setq( d, if( strlen( %2 ), %2, %b )), 
+
+// c: wordCount
+        setq( c, words( %0, %qd )), 
+
+// x: numColumns (rough pass)
+        setq( x, 
+        	max( 1, 
+        		min( 
+//.. words
+        			%qc, 
+//.. %1, if appropriate
+        			if( %1, %1, %qc ), 
+//.. half screen width
+        			div( width( %# ), 2 ), 
+//.. how many columns could this text get in that width?
+        			div( inc( width( %# )), 
+        				last( 
+        					sort( 
+        						iter( %0, 
+        							inc( strlen( %i0 )), 
+        							%qd, %b 
+        						)
+        					)
+        				)
+        			)
+        		)
+        	)
+        ), 
+
+// y: (wordCount + numColumns - 1) / columns
+//    (    15    +    3    - 1) /   3
+//            17 / 3 --> 5.6666 --> 5
+// y: rowCount
+        setq( y, div( add( %qc, dec( %qx )), %qx )), 
+
+// x: (wordCount + rowCount - 1 ) / rowCount
+//    (    15    +    5     - 1 )  / 5
+//             19 / 5 --> 3.8 --> 3
+// x: no really, how many columns? (don't know why, but here we are)
+        setq( x, div( add( %qc, dec( %qy )), %qy )), 
+
+// w: width of each column
+        setq( w, ulocal( #UDF/f.widthcol, %qx )), 
+
+// p: fill (%4, default space)
+        setq( p, if( strlen( %4 ), %4, %b )), 
+
+// s: column divider (%3, default space)
+        setq( s, if( strlen( %3 ), %3, %b )), 
+
+// if there actually words...
+        if( %qc, 
+            iter( ulocal( #UDF/f.transpose, %qx, %qy ), 
+                strcat( 
+                    ljust( index( %0, %qd, %i0, 1 ), %qw, %qp ), 
+                    switch( 1, 
+                        t( mod( inum(0), %qx )), 
+                        rjust( 
+                            %qs, 
+                            ulocal( #UDF/f.slackcol, 
+                            	%qx, inc( mod( inum(0), %qx ))
+                            )
+                        ), 
+                        lt( inum(0), %qc ), 
+                        %r 
+                    )
+                ), 
+                %b, u( .null )
+            )
+        )
+    )
+&HELP.VTABLE [v( d.udf )]=See in-depth help file.
+
+/*
+VTABLE HELP
+
+There should be a complex vcolumns help.
+
+I use this for my Code Object Data Parent.
+*/
+
+&F.TRANSPOSE [v( d.udf )]=
+    iter( 
+        lnum( 0, dec( %1 )), 
+        iter( lnum( 0, dec( mul( %0, %1 )), , %1 ), add( 1, %i0, %i1 ))
+    )
+
+&F.SLACKCOL [v( d.udf )]=
+    strcat( 
+        setq( s, sub( width( %# ), mul( ulocal( #UDF/f.widthcol, %0 ), %0 ))), 
+        sub( 
+            div( mul( %qs, %1 ), dec( %0 )), 
+            div( mul( %qs, dec( %1 )), dec( %0 ))
+        )
+    )
+
+&F.WIDTHCOL [v( d.udf )]=
+    if( lt( %0, 2 ), 
+        width( %# ), 
+        floor( fdiv( sub( width( %# ), sub( %0, 1 )), %0 ))
+    )
+
+
+
+
+/* 
+--------------------------------------------------------------------------------
+-- cleanup ---------------------------------------------------------------------
+*/
+
+@switch/first version()=
+	RhostMUSH*, { @@ do nothing }, 
+	{ @fo me=@edit [v( d.udf )]/*=#UDF, [v( d.udf )] }
+
+@trigger v( d.udf )/startup
+

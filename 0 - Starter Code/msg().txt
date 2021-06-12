@@ -1,0 +1,22 @@
+/*
+================================================================================
+== msg() : Just a simple way to output code notices ============================
+
+This is as simple as they come, but I'm all for consistency.
+Define once, call multiple.
+
+*/
+
+&UFUNC.MSG [v( d.udf )]=ansi( h, <%0>, n, %b%1 )
+&HELP.MSG [v( d.udf )]=
+    msg( <header>, <message> ): 
+    A game-wide notice output.
+
+
+
+/* 
+--------------------------------------------------------------------------------
+-- cleanup ---------------------------------------------------------------------
+*/
+
+@trigger u( d.udf )/startup

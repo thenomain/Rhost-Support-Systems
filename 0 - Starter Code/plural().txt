@@ -1,0 +1,40 @@
+/*
+================================================================================
+== plural() ====================================================================
+
+USAGE:
+	plural( <num>, <singular>, <plural>[, <include num?> ])
+
+Returns <singular> if <num> is 1, else <plural>.
+If <include num?> is true (1), then prepend <num>
+
+e.g.
+	> think plural( 1, person, people )
+	person
+	
+	> think plural( 4, person, people, 1 )
+	4 people
+
+*/
+
+&UFUNC.PLURAL [v( d.udf )]=
+    if( isint( %0 ), 
+    	strcat(
+    		if( t( %2 ), %0%b ), 
+    		if( eq( %0, 1 ), %1, %2 )
+    	)
+    )
+&HELP.PLURAL [v( d.udf )]=
+    plural( <num>, <singular>, <plural>[, <include num?> ]): 
+    Outputs <num> plus the <singular> or <plural> as passed.
+    If <include num?> is true, prepend <num>. 
+
+
+/* 
+--------------------------------------------------------------------------------
+-- cleanup ---------------------------------------------------------------------
+*/
+
+@trigger v( d.udf )/startup
+
+

@@ -1,0 +1,35 @@
+/*
+================================================================================
+== Replacement Width() =========================================================
+
+RHOST doesn't do NAWS from Telnet, so let's find people's width.
+
+(Doing this in TinyMUX is a little more tricky. I have that under 'support functions' in my github. Will eventually make it over here.)
+
+--
+
+q0: %0 if exists, else %# (user)
+%@: The dbref of the calling object (for power-check)
+
+*/
+
+&UFUNC/PRIVILEGED.WIDTH [v( d.udf )]=
+    strcat( 
+        setq( 0, if( t( %0 ), %0, %# )), 
+        if( cor( isstaff( %@ ), haspower( %@, see_all ), strmatch( %#, %q0 )), 
+        	default( %q0/width, 80 ), 
+            #-1 Permission Denied 
+        )
+    )
+&HELP.WIDTH [v( d.udf )]=
+    width( [<target>] ): 
+    Allows players to set '&width' on themselves to force a non-80-character 
+    width. Else assumes 80 characters.
+
+
+/* 
+--------------------------------------------------------------------------------
+-- cleanup ---------------------------------------------------------------------
+*/
+
+@trigger u( d.udf )/startup

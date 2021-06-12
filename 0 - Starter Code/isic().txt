@@ -1,0 +1,30 @@
+/*
+================================================================================
+== isic() ======================================================================
+
+USAGE: 
+	isic( <character> )
+
+A simple function that will tell code if someone is considered "in character" 
+and therefore allow or disallow them certain privileges or accesses.
+
+This code looks for an object attribute of '&_ic', but can be as simple or 
+complex as you'd like.
+
+*/
+
+&UFUNC/PRIVILEGED.ISIC [v( d.udf )]=t( get( %0/_ic ))
+
+&HELP.ISIC [v( d.udf )]=
+    isic( <target> ): 
+    Returns '1' if target is in a room marked 'in-character'.
+
+
+
+/* 
+--------------------------------------------------------------------------------
+-- cleanup ---------------------------------------------------------------------
+*/
+
+@trigger v( d.udf )/startup
+

@@ -1,0 +1,43 @@
+/*
+================================================================================
+== say() =======================================================================
+
+USAGE:
+	say( <target dbref>, <say or pose format> ): 
+
+Allows code to spoof say-, pose- or emit-formatted code.
+
+Could use more access/security checks.
+
+*/
+
+&UFUNC.SAY [v( d.udf )]=
+    strcat( 
+        setq( 0, regmatchi( %1, %(.%)%(%[\\s\\S%]*%), 0 1 2 )), 
+        switch( %q1, 
+            :, [u( #UDF/.moniker, %0 )] %q2, 
+            ;, [u( #UDF/.moniker, %0 )]%q2, 
+            |, %q2, 
+            ", [u( #UDF/.moniker, %0 )] says%, “%q2”, 
+            [u( #UDF/.moniker, %0 )] says%, “%q1%q2” 
+        )
+    )
+&HELP.SAY [v( d.udf )]=
+    say( <target dbref>, <say or pose format> ): 
+    Outputs the same as say/pose/emit.
+
+
+
+
+
+/* 
+--------------------------------------------------------------------------------
+-- cleanup ---------------------------------------------------------------------
+*/
+
+@switch/first version()=
+	RhostMUSH*, { @@ do nothing }, 
+	{ @fo me=@edit [v( d.udf )]/*=#UDF, [v( d.udf )] }
+
+@trigger v( d.udf )/startup
+
