@@ -111,7 +111,7 @@ think vtable( this_is a pretty_decent_test to have for vtable, , , %b|%b )
                         %r 
                     )
                 ), 
-                %b, u( .null )
+                %b, u( #UDF/.@@ )
             )
         )
     )

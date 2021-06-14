@@ -72,7 +72,7 @@ this code to be starter code for multiple platforms, as it would make it easier
 for installers and for me to port code.
 
 --------------------------------------------------------------------------------
--- .null -----------------------------------------------------------------------
+-- .@@ -------------------------------------------------------------------------
 
 What do we use as a null delimiter?
 
@@ -82,8 +82,9 @@ elsewhere: @@
 */
 
 @switch/first version()=
-	RhostMUSH*, { &.null [v( d.udf )]=lit(@@()) }, 
-	{ &.null [v( d.udf )]=@@ }
+	RhostMUSH*, { &.@@ [v( d.udf )]=lit(@@()) }, 
+	PennMUSH*, { &.@@ [v( d.udf )]=lit(@@()) }, 
+	{ &.@@ [v( d.udf )]=@@ }
 
 /*
 --------------------------------------------------------------------------------

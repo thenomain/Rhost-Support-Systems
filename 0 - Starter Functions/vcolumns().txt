@@ -68,7 +68,7 @@ registers:
 					), 
 					setq( c, inc( %i0 ))
 				), 
-				, u(#UDF/.null)
+				, u(#UDF/.@@)
 			), 
 /*
     at this this point, %qc will be 1 to 9
@@ -92,7 +92,7 @@ registers:
 					[setr( w, first( v( %i0 ), : ))]:
 					[wrap( edit( rest( v( %i0 ), : ), %qd, %r ), %qw, left )] 
 				), 
-				, u(#UDF/.null)
+				, u(#UDF/.@@)
 			), 
 
 //.. h: height of the tallest column
@@ -100,7 +100,7 @@ registers:
 				setq( h, 
 					max( %qh, u( #UDF/.words, rest( r( %i0 ), : ), %r ))
 				), 
-				, u(#UDF/.null) 
+				, u(#UDF/.@@) 
 			), 
 
 //.. 'from 1 to height do:'
