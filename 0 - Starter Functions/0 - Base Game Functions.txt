@@ -28,6 +28,7 @@ Formatting:
 
 	D.<name>: Data. Call via 'get( #UDF/D.<name> )'
 	F.<name>: Function. Call via 'u( #UDF/F.<name> )'
+	.<name> : Helpers. Call via 'u( #UDF/.<name> )'
 
 
 ================================================================================
