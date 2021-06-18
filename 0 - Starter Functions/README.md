@@ -29,26 +29,33 @@ https://format.ursamu.io/api?include=git:thenomain/Rhost-Support-Systems/0%20-%2
 @@ -- IMPORTANT FORMATTING STUFF --------
 
 #include header() footer() divider().txt
+
 #include msg().txt
 
 @@ -- VERTICAL COLUMNS/TABLE ------------
 
 #include vcolumns().txt
+
 #include vtable().txt
 
 @@ -- NICE FORMATTING OPTIONS -----------
 
 #include plural().txt
+
 #include titlestr().txt
+
 #include crumple().txt
 
 @@ -- RPG HELPERS -----------------------
 
 #include isic().txt
+
 #include shortdesc().txt
+
 #include say().txt
 
 @@ -- A FEW MORE FUNCTIONS --------------
 
 #include lnumrange().txt
+
 #include lpmatch().txt
