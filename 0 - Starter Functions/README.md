@@ -19,8 +19,8 @@ https://format.ursamu.io/api?include=git:thenomain/Rhost-Support-Systems/0%20-%2
 
 @@ -- VERTICAL COLUMNS/TABLE ------------
 
-# vcolumns().txt
-# vtable().txt
+#include vcolumns().txt
+#include vtable().txt
 
 @@ -- NICE FORMATTING OPTIONS -----------
 
