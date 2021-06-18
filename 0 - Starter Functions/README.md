@@ -1,1 +1,8 @@
-Does this do anything inside a folder? Yes. Huh. Didn't know that.
+#include ./0 - Base Game Functions.txt
+
+@@ -----------------------------------
+
+#include crumple().txt
+
+@@ -----------------------------------
+
