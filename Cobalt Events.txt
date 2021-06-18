@@ -1,14 +1,14 @@
 /* 
-
 RHOST-ization of Cobalt's Events
 by
 	Cobalt
 with
-	some tweaks by Thenomain
+	some (many) tweaks by Thenomain
 and
 	help from the Rhost Discord
 
 REQUIRES: 
+- RhostMUSH 4.1 or later, as far as you can go
 - Myrddin's Mushcron
 - Myrddin's Bboards
 - Ashcomm and a channel for announcements, if using 'event/announce'
@@ -16,6 +16,8 @@ REQUIRES:
 This is formatted for Ursamu's Formatter: https://format.ursamu.io
 It is mostly formatted for Muxify: https://muxify.musoapbox.net/editor.html
 	* Any instance of /* in code can break it, tho.
+
+https://format.ursamu.io/api?include=git:thenomain/Rhost-Support-Systems/Cobalt%20Events.txt
 
 */
 
