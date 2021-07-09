@@ -1,0 +1,143 @@
+/* 
+################################################################################
+## SYSTEM: STAFF ###############################################################
+
+A tiny 'who' for staff. 
+
+&position - simple text for position for staffer, can be self-set
+
+
+--------------------------------------------------------------------------------
+-- Staff: To-Do ----------------------------------------------------------------
+
+* A 'staff <name>' might be nice as a tiny 'finger' for staff.
+* List "player staff" positions
+
+
+
+================================================================================
+== STAFF: Command ==============================================================
+
+	staff
+
+The main driving command.
+
+Staff who set themselves 'dark' will still appear here, but under a 
+"super-off-duty" category as a clue for people not to bother them.
+
+--
+
+w: on duty
+o: off duty
+d: dark
+
+*/
+
+&C.STAFF [v( d.bnww )]=$^\+?staff$: @pemit %#=
+	strcat( 
+		setq( w, filter( fil.staff, lwho())), 
+		setq( d, sortby( sortby.connected, filter( fil.dark, %qw ))), 
+		setq( w, setdiff( %qw, %qd )), 
+		setq( o, filter( fil.off-duty, %qw, %qd )), 
+		setq( w, sortby( sortby.connected, setdiff( %qw, %qo ))), 
+		wheader( [mudname()] Staff ), %r, 
+
+// staff: on duty
+		iter( %qw, 
+			u( display.staff.one-line, %i0, singletime( idle( %i0 )), %# ), 
+			, %r 
+		), %r, 
+
+// staff: off duty
+		if( words( %qo ), 
+			strcat( 
+				wdivider( Off-Duty ), %r, 
+				iter( %qo, 
+					u( display.staff.one-line, 
+						%i0, singletime( idle( %i0 )), %# 
+					), , %r 
+				), %r 
+			), 
+		), 
+
+// staff: dark, do not bother
+		if( words( %qd ), 
+			strcat( 
+				wdivider( Dark Staff -- Super-Off-Duty ), %r, 
+				iter( %qd, 
+					ansi( xh, u( display.staff.one-line, %i0, , %# )), 
+					, %r 
+				), %r 
+			)
+		), 
+		wfooter()
+	)
+
+@set [v( d.bnww )]/C.STAFF=regexp
+
+
+
+/*
+================================================================================
+== STAFF: /DUTY ================================================================
+
+Go on or off duty. Can be used by players but is meaningless unless another 
+system uses it, such as 'wikisprite' or 'storyteller'.
+
+*/
+
+&C.STAFF/DUTY [v( d.bnww )]=$^\+?staff/duty$:
+	@pemit %#=u( .msg, 
+		staff/duty, 
+		You have gone 
+			[if(
+				u( .onduty, %# ), 
+				OFF, 
+				ON 
+			)] 
+			duty.
+	); 
+	@trigger %!/tr.staff_duty.toggle=%#; 
+
+@set [v( d.bnww )]/C.STAFF/DUTY=regexp
+
+
+/*
+--------------------------------------------------------------------------------
+-- Staff: Toggle 'Staff_Duty' Attribute ----------------------------------------
+
+This is here to make it easier for other code to access.
+
+Maybe it should be on the main object?
+
+--
+
+0: target
+
+*/
+
+&tr.staff_duty.toggle [v( d.bnww )]=&staff_duty %0=[not( u( .onduty, %0 ))]
+
+
+
+/*
+================================================================================
+== STAFF: Displays =============================================================
+
+
+--------------------------------------------------------------------------------
+-- Staff: Display One Line -----------------------------------------------------
+
+0: target dbref
+1: idletime
+2: enactor's (viewer's) dbref
+
+*/
+
+&display.staff.one-line [v( d.bnww )]=
+	strcat( 
+		ljust( u( f.get-who-flags, %0 ), 3 ), 
+		ljust( name( %0 ), 20 ), %b, 
+		ljust( %1 , 4 ), %b, 
+		ljust( get( %i0/position ), sub( width( %2 ), 47 ))
+	)
