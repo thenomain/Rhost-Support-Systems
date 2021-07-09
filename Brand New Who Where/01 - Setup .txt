@@ -16,7 +16,6 @@ current systems:
 	where
 	finger
 	staff
-	duty
 	name
 	idle sweep
 
@@ -24,6 +23,25 @@ planned:
 	hangouts
 	directory
 	watch
+
+EXCEPT FOR THIS FILE, THERE IS NO NEED TO INSTALL ANY OTHERS IN NUMERIC ORDER.
+
+
+
+================================================================================
+== System Assumptions and Defaults =============================================
+
+
+--------------------------------------------------------------------------------
+-- "On Duty" -------------------------------------------------------------------
+
+A staff or player administration concept to indicate availability to players.
+
+&staff_duty:
+	'1' or null: On-duty
+	'0': Off-duty
+
+This allows 'null' to mean on-duty, making staff duty opt-out.
 
 
 
@@ -40,7 +58,8 @@ You will need the following user-defined functions:
 You will need something like the following user-defined functions:
 	isstaff( <dbref> ) - 1 if person is staff
 	isapproved( <dbref> ) - 1 if person is allowed to be in-character or staff
-	titlestr( <string to prettify >)	
+	titlestr( <string to prettify >)
+	width( <target> ) - how wide is their screen?
 
 
 
@@ -145,12 +164,13 @@ Functions that are generic and very quick.
 --------------------------------------------------------------------------------
 -- Dot Function: OnDuty --------------------------------------------------------
 
-Is someone "on duty" from their administrative (staff) job?
-(defaults to 'transparent' on Mux. This doesn't exist on Rhost. Fix this!)
+Is someone "on duty" from their administrative job? See "On Duty", above.
+
+Only an explicit "0" means "off duty". Every other condition is "on duty".
 
 */
 
-&.onduty [v( d.bnww )]=orflags( %0, !t )
+&.onduty [v( d.bnww )]=not( strmatch( get( %0/staff_duty ), 0 ))
 
 
 /*
@@ -204,7 +224,15 @@ I like mine, but if you don't want to install my function:
 &.titlestr [v( d.bnww )]=titlestr( %0 )
 
 
+/*
+--------------------------------------------------------------------------------
+-- Dot Function: Width ---------------------------------------------------------
 
+Default: 80 characters
+
+*/
+
+&.width [v( d.bnww )]=localize( if( isint( setr( w, width( %0 ))), %qw, 80 ))
 
 
 
