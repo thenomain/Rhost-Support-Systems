@@ -1,0 +1,113 @@
+/* 
+################################################################################
+## SYSTEM: IDLE SWEEP ##########################################################
+
+Sweep idle players into a room. Be nice about it. Allow game administration to 
+set criteria about when not to move them, by room, zone, or code.
+
+Time to idle before swept: &f.check.superidle. 
+This is performed regardless of &pref.segregate.idle.
+
+
+
+================================================================================
+== IDLE SWEEP: SETUP ===========================================================
+
+
+--------------------------------------------------------------------------------
+-- Idle Sweep: Preferences -----------------------------------------------------
+*/
+
+&pref.idle.exempt.rooms [v( d.bnww )]=@@( possibly your ooc room )
+&pref.idle.exempt.zones [v( d.bnww )]=@@( ooc room or zones )
+&pref.idle.exempt.code [v( d.bnww )]=strmatch( loc( %0 ), home( %0 ))
+
+// .. look for "Quiet Room" and make it the room to move idle people to.
+// .. else default to #0
+
+@if [t( isdbref( 
+		setr( x, search( eroom=strmatch( name( ## ), Quiet Room )))
+	))]={ 
+		&pref.idle_room [v( d.bnww )]=%qx; 
+	}, 
+	{ 
+		think [ansi( hr, 
+			Can't find a Quiet Room. Setting &pref.idle_room to #0. 
+		)]; 
+		&pref.idle_room [v( d.bnww )]=#0; 
+	}; 
+
+
+/*
+--------------------------------------------------------------------------------
+-- Idle Sweep: Set Up Mushcron -------------------------------------------------
+
+Hmm. Maybe would be better to do:
+
+	&startup.idle [v( d.bnww )]={ 
+		@trigger %!/trig.idle.sweep-players; 
+		@wait 60=@trigger %!/startup.idle; 
+	}
+
+*/
+
+@fo me=
+	&cron_time_idle-sweep [get( v( d.bnww )/d.mushcron )]=||||00 01 02 03 04 
+	05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 
+	30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 
+	55 56 57 58 59|
+
+@fo me=
+	&cron_job_idle-sweep [get( v( d.bnww )/d.mushcron )]=
+		@trigger [v( d.bnww )]/trig.idle.sweep-players
+
+
+/*
+--------------------------------------------------------------------------------
+-- Idle Sweep: Trigger (run once per minute) -----------------------------------
+*/
+
+&trig.idle.sweep-players [v( d.bnww )]=
+	think strcat( 
+		super-idle:, %b, 
+		setr( i, filter( f.check.superidle, u( .lwho, %@ ))), %r, 
+
+		excuse staff:, %b, 
+		setr( i, setdiff( %qi, filter( fil.staff, %qi ))), %r, 
+
+		people to leave alone:, %b, 
+		setr( h, 
+			iter( %qi, 
+				if( 
+					cor( 
+						t( setinter( 
+							v( pref.idle.exempt.rooms ), 
+							loc( %i0 )
+						)), 
+						t( setinter( 
+							v( pref.idle.exempt.zones ), 
+							zone( loc( %i0 ))
+						)), 
+						t( u( pref.idle.exempt.code, %i0 )), 
+						strmatch( 
+							loc( %i0 ), 
+							v( pref.idle_room )
+						)
+					), 
+					%i0 
+				)
+			)
+		), %r, 
+
+		people to move:, %b, 
+		setr( i, setdiff( %qi, %qh )), %r, 
+	); 
+
+	@dolist %qi={ 
+// .. it would be cool if we sent this message only once per room ..
+		@oemit ##=msg( zzzz, Moving a sleepy [u( .moniker, ## )]. ); 
+		@tel/quiet ##=v( pref.idle_room ); 
+		@pemit ##=msg( zzzz, Moved you to a safe location till you wake up... ) 
+	};
+
+

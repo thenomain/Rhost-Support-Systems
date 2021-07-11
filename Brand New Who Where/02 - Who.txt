@@ -1,0 +1,158 @@
+/*
+################################################################################
+## SYSTEM: WHO #################################################################
+
+
+
+================================================================================
+== WHO: Command ================================================================
+
+	who[ <partial name>]
+
+Returns a list of who's online in order of online time.
+
+'Idle' people are dimmed and 'Superidle' people are put in their own group.
+
+These can be changed via preferences in '01 - Setup'.
+
+--
+
+1: partial name to match (optional)
+
+1: lwho, as can be seen by the enactor (optionally filtered by name input)
+w: lwho filtered by %1, if applicable, otherwise lwho
+u: unique logins
+
+*/
+
+&c.who [v( d.bnww )]=$^\+?who( .*)?$:
+	@pemit %#=strcat( 
+		setq( l, setunion( u( .lwho, %# ), )), 
+		setq( u, setunion( iter( %ql, get( %i0/lastip )), )), 
+		if( t( trim( %1 )), 
+			setq( w, filter( fil.name-match, %qw, , , trim( %1 ))), 
+			setq( w, %ql )
+		), 
+		u( display.who.complete, 
+			%#, 
+			Who - [poll()], 
+			cat( 
+				words( %ql ), Connected, /, 
+				words( %qu ), Unique 
+			), 
+			%qw 
+		)
+	)
+
+@set [v( d.bnww )]/c.who=regexp
+
+
+/* 
+================================================================================
+== WHO: Display & Format =======================================================
+
+
+--------------------------------------------------------------------------------
+-- Who: Display All Lines ------------------------------------------------------
+
+0: enactor dbref (%#)
+1: header text
+2: footer text
+3: dbrefs to list
+
+i: 'super-idle' people (ignore if '&pref.segregate.idle' is '0')
+
+*/
+
+&display.who.complete [v( d.bnww )]=
+	strcat( 
+		setq( i, 
+			if( v( pref.segregate.idle ), filter( f.check.superidle, %3 ))
+		), 
+		header( %1 ), %r, 
+		iter( u( sortby.connect-time, setdiff( %3, %qi )), 
+			u( display.who.one-line, %i0, %0 ), , %r 
+		), %r, 
+		if( t( %qi ), 
+			strcat( 
+				divider( idle players ), %r, 
+				iter( %qi, u( display.who.one-line, %i0, %0 ), , %r ), 
+				%r, 
+			)
+		), 
+		divider( 
+			strcat( 
+				~ Seeking RP%, 
+				* Staff %(on duty%)%, 
+				x Staff %(off duty%), 
+				if( u( .isstaff, %0 ),%, D Dark )
+			)
+		), %r, 
+		footer( %2 )
+	)
+
+
+/*
+--------------------------------------------------------------------------------
+-- Who: Display One Person -----------------------------------------------------
+
+Here is where you'd want most of your changes to display output for 'who'.
+
+If someone is 'idle' or 'superidle' (see '01 - Setup' for preferences), their 
+idle time is reported as --.
+
+--
+
+0: dbref of displayed player object
+1: dbref of viewer (%#)
+
+i: is %0 idle? -- &pref.segregate.idle
+s: is %0 superidle? -- &pref.segregate.superidle
+a: ansi if %0 is idle
+
+*/
+
+&display.who.one-line [v( d.bnww )]=
+	localize( strcat( 
+
+// get idle statuses, if applicable
+		setq( i, if( v( pref.segregate.idle ), u( f.check.idle, %0 ))), 
+		setq( s, 
+			if( v( pref.segregate.idle ), u( f.check.superidle, %0 ))
+		), 
+		setq( a, if( t( %qi ), xh, n )), 
+
+// display!
+// .. (2) who-flags
+		ljust( u( f.get-who-flags, %i0 ), 2 ), %b, 
+// .. (14) name/moniker
+		ljust( ansi( %qa, u( .moniker, %0 )), 14 ), %b, 
+// .. (7) alias
+		ljust( ansi( %qa, get( %0/alias )), 7 ), %b, 
+// .. (3) idle time
+		rjust( 
+			if( cor( not( %qs ), isstaff( %1 )), 
+				ansi( %qa, singletime( idle( %0 ))), 
+				ansi( xh, -- )
+			), 
+			3 
+		), %b%b, 
+// .. (3) connection time
+		rjust( 
+			if( cor( not( %qs ), isstaff( %1 )), 
+				ansi( %qa, singletime( conn( %0 ))), 
+				ansi( xh, -- )
+			), 
+			3 
+		), %b%b, 
+// .. (39) where
+		ljust( 
+			ansi( %qa, 
+				if( findable( %1, %0 ), 
+					name( where( %0 )), 
+					* Unfindable * 
+				)
+			), 
+			39 
+		)
+	))

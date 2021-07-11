@@ -1,0 +1,313 @@
+/*
+################################################################################
+## SYSTEM: FINGER ##############################################################
+
+The finger part of the Who-Where setup. Finger is a list of detailed information 
+about a specific player-object.
+
+Default or preformated finger entries are stored as:
+	&finger.<entry_name>: <code>
+
+
+
+================================================================================
+== FINGER: Command =============================================================
+
+*/
+
+&c.finger [v( d.bnww )]=$^\+?finger(.*)$:
+	think strcat( 
+		p:, setr( p, if( t( %1 ), pmatch( trim( %1 )), %# ))
+	); 
+	
+	@assert hastype( %qp, PLAYER )={ 
+		@pemit %#=u( .msg, finger, Target not found )
+	}; 
+
+	@pemit %#=strcat( 
+		wheader( u( display.finger.header, %qp, %# )), %r, 
+
+		u( display.finger.main, %qp ), %r, 
+
+		if( setr( x, u( display.finger.user, %qp )), 
+			strcat( 
+				wdivider( User ), %r, 
+				%qx, %r 
+			)
+		), 
+
+		if( isstaff( %# ), 
+			strcat( 
+				wdivider( Staff ), %r, 
+				u( display.finger.staff, %qp ), %r 
+			)
+		), 
+
+		wfooter( u( display.finger.footer, %qp ))
+	); 
+
+@set [v( d.bnww )]/c.finger=regex
+
+
+
+/* 
+================================================================================
+== FINGER: Preferences =========================================================
+
+* pref.finger.max-fields
+  0: none
+  int: that number
+  non-int: infinite
+*/
+
+&pref.finger.max-fields [v( d.bnww )]=3
+
+&pref.finger.section.main [v( d.bnww )]=
+	full_name location wiki last_connected
+
+&pref.finger.section.staff [v( d.bnww )]=
+	template last_ip
+
+
+
+/* 
+================================================================================
+== FINGER: Displays & Formatting ===============================================
+
+
+--------------------------------------------------------------------------------
+-- Finger: Format One Finger Section -------------------------------------------
+
+0: target dbref
+1: list of entries 
+
+*/
+
+&format.finger.one-section [v( d.bnww )]=
+	iter( %1, 
+		strcat( 
+			u( format.finger.title, %i0 ), %b, 
+			wrap( 
+				udefault( finger.%i0, get( %0/finger.%i0 ), %0 ), 
+				55, left, , , 16 
+			)
+		), , %r 
+	)
+
+
+/*
+--------------------------------------------------------------------------------
+-- Finger: Display Main Section ------------------------------------------------
+
+The main section is the same for everyone.
+
+--
+
+0: target dbfef
+
+*/
+
+&display.finger.main [v( d.bnww )]=
+	u( format.finger.one-section, %0, u( pref.finger.section.main ))
+
+
+/*
+--------------------------------------------------------------------------------
+-- Finger: Display User Section ------------------------------------------------
+
+Users can make as many as '&pref.finger.max-fields' user fields to be displayed. 
+If they have more, they will probably be displayed in order.
+
+--
+
+0: target dbfef
+
+*/
+
+&display.finger.user [v( d.bnww )]=
+	u( format.finger.one-section, %0, u( f.finger.get-user-fields, %0 ))
+
+
+/*
+--------------------------------------------------------------------------------
+-- Finger: Display Staff Section -----------------------------------------------
+
+This is the section that only staff can see. (Staff check is done elsewhere.)
+
+--
+
+0: target dbref
+
+*/
+
+&display.finger.staff [v( d.bnww )]=
+	u( format.finger.one-section, %0, u( pref.finger.section.staff ))
+
+
+/*
+--------------------------------------------------------------------------------
+-- Finger: Display Header ------------------------------------------------------
+
+Very top of the entire 'finger'.
+
+--
+
+0: target dbref
+1: enactor dbref
+
+*/
+
+&display.finger.header [v( d.bnww )]=
+	strcat( 
+		u( finger.name, %0 ), 
+		if( u( .isstaff, %1 ), %b%(%0%)), 
+		if( strlen( setr( a, u( finger.alias, %0 ))), %b%[%qa%] )
+	)
+
+
+/*
+--------------------------------------------------------------------------------
+-- Finger: Display Footer ------------------------------------------------------
+
+Bottom of the entire 'finger'
+
+--
+
+0: target dbref
+
+*/
+
+&display.finger.footer [v( d.bnww )]=
+	strcat( %[, u( finger.approval, %0 ), %] )
+
+
+/*
+--------------------------------------------------------------------------------
+-- Finger: Format Entry Title --------------------------------------------------
+
+The title of any given entry.
+Limits to 15 characters.
+Could be changed to a &pref.finger.* in the future.
+
+--
+
+0: entry_title
+
+*/
+
+&format.finger.title [v( d.bnww )]=
+	ljust( ansi( h, [u( .titlestr, edit( %0, _, %b ))]: ), 15 )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+================================================================================
+== FINGER: Functions ===========================================================
+
+
+--------------------------------------------------------------------------------
+-- Finger: Get User Fields -----------------------------------------------------
+
+Look for any finger fields the user has made up, i.e. not in 
+'&pref.finger.section.*'
+
+List only the first number in '&pref.finger.max_fields' (see above).
+
+--
+
+0: target dbref
+
+m: max fields preference
+d: default finger fields (listed in other sections)
+u: user-defined finger fields
+
+*/
+
+&f.finger.get-user-fields [v( d.bnww )]=
+	localize( strcat( 
+		setq( m, v( pref.finger.max-fields )), 
+		setq( d, iter( lattr( %!/pref.finger.section.* ), lcstr( v( %i0 )))), 
+		setq( u, 
+			u( .remove_elements, 
+				lcstr( edit( lattr( %0/finger.* ), FINGER., )), 
+				%qd 
+			)
+		), 
+
+// return 0 or more user-defined finger field names
+		switch( v( pref.finger.max-fields ), 
+// .. preference is 0: return nothing 
+			0, @@(), 
+// .. preference is >0: return that many user fields
+			>0, 
+			extract( %qu, 1, %qp ), 
+// .. else: return all user fields
+			%qu 
+		)
+	))
+
+
+
+
+/*
+================================================================================
+== FINGER: Fields ==============================================================
+
+Assume %0 is always the dbref of the target.
+
+Use localize() if using registers!
+
+*/
+
+&finger.name [v( d.bnww )]=name( %0 )
+
+&finger.alias [v( d.bnww )]=get( %0/alias )
+
+&finger.approval [v( d.bnww )]=isapproved( %0, status )
+
+&finger.location [v( d.bnww )]=
+	localize( if( t( setr( l, objeval( %#, loc( %0 )))), 
+		strcat( 
+			name( %ql ), 
+			if( hasattr( %ql, coord ), 
+				strcat( %b, %[, get( %ql/coord ), %] )
+			)
+		), 
+		ansi( xh, <unknown> )
+	))
+
+&finger.wiki [v( d.bnww )]=
+	default( %0/finger.wiki, 
+		ansi( xh, %(use '&finger.wiki me=<url>' to set this.%))
+	)
+
+&finger.last_connected [v( d.bnww )]=
+	localize( if( 
+		hasflag( %0, connected ), Connected, 
+		strcat( 
+			setr( c, get( %0/last )), %b, 
+			%(, first( exptime( sub( secs(), convtime( %qc )))), %) 
+		)
+	))
+
+&finger.last_ip [v( d.bnww )]=get( %0/lastip )
+
+&finger.full_name [v( d.bnww )]=
+	localize( if( 
+		setr( t, getstat( %0/full_name )), 
+		%qt, 
+		ansi( xh, <full name not set> )
+	))
