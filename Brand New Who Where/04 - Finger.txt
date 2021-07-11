@@ -311,3 +311,13 @@ Use localize() if using registers!
 		%qt, 
 		ansi( xh, <full name not set> )
 	))
+
+
+
+/*
+================================================================================
+== FINGER: Help File ===========================================================
+
+A help file really should go here.
+
+*/

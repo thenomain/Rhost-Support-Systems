@@ -154,3 +154,13 @@ After &d.wantrp.timeout seconds (default: 2 hours), turn off the flag.
 @fo me=
 	&cron_job_wantrp-timeout [get( v( d.bnww )/d.mushcron )]=
 		@trigger [v( d.bnww )]/cron.wantrp.timeout
+
+
+
+/*
+================================================================================
+== WANT RP: Help File ==========================================================
+
+A help file really should go here.
+
+*/

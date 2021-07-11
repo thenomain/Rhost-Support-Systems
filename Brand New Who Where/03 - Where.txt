@@ -163,3 +163,12 @@ l: lwho() with potentially unfindable people filtered out
 		setunion( iter( %ql, room( %i0 )), )
 	)
 
+
+
+/*
+================================================================================
+== WHERE: Help File ============================================================
+
+A help file really should go here.
+
+*/

@@ -141,3 +141,13 @@ Maybe it should be on the main object?
 		ljust( %1 , 4 ), %b, 
 		ljust( get( %i0/position ), sub( width( %2 ), 47 ))
 	)
+
+
+
+/*
+================================================================================
+== STAFF: Help File ============================================================
+
+A help file really should go here.
+
+*/

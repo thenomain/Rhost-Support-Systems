@@ -119,3 +119,12 @@ Yes, I know this is the same as 'header', but it might not always be.
 		), 
 		r 
 	)
+
+
+/*
+================================================================================
+== NAME: Help File ============================================================
+
+A help file really should go here.
+
+*/
