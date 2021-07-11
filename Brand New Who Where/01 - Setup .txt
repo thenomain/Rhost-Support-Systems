@@ -24,12 +24,20 @@ planned:
 	directory
 	watch
 
-EXCEPT FOR THIS FILE, THERE IS NO NEED TO INSTALL ANY OTHERS IN NUMERIC ORDER.
+EXCEPT FOR THIS FILE, THERE IS NO NEED TO INSTALL THE OTHERS IN NUMERIC ORDER.
 
 
 
 ================================================================================
 == System Assumptions and Defaults =============================================
+
+--------------------------------------------------------------------------------
+-- Preferences -----------------------------------------------------------------
+
+Each system or the system as a whole uses a 'pref.' prefix to allow easier setup 
+to change key system elements.
+
+	&pref.<system>.<preference>
 
 
 --------------------------------------------------------------------------------
