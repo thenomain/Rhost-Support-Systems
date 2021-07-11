@@ -1,0 +1,121 @@
+/*
+################################################################################
+## SYSTEM: NAME ################################################################
+
+Find all matches of 'name' or 'name*' or '*name*' against player objects' @name.
+Includes @alias.
+
+This is helpful for games with "freezer" systems that, instead of deleting a 
+character object when it's gone unused for extended times, append a value to it.
+
+
+
+================================================================================
+== NAME: Command ===============================================================
+
+n: secure()'d name inputted. Some may use '*name', so leading * is removed
+r: return from the initial search
+w: words (number) in %qr
+
+*/
+
+&C.NAME [v( d.bnww )]=$^\+?name( .+)?$:
+	@assert strlen( %1 )={ 
+		@pemit %#=u( .msg, name, Please supply a search prefix ) 
+	}; 
+	think strcat( 
+		n:, setr( n, trim( secure( trim( %1 )), *, l )), %r, 
+		r:, setr( r, 
+			search( eplayer=
+				cor( 
+					strmatch( name( ## ), %qn* ), 
+					strmatch( get( ##/alias ), %qn* )
+				)
+			)
+		), %r, 
+		w:, setr( w, words( %qr )), %r, 
+	); 
+	@assert t( %qw )={ 
+		@pemit %#=u( .msg, name, No names match ) 
+	}; 
+	@assert lte( %qw, 20 )={ 
+		@pemit %#=u( .msg, name, That filter is too vague%; %qw names match ) 
+	}; 
+	@pemit %#=
+		strcat( 
+			header( Names matching '%qn' ), %r, 
+			ansi( xh, u( format.name.header, Name, Alias, Location, Active )), 
+			%r, 
+			divider(), %r, 
+			iter( %qr, u( display.name.lines, %i0 ), , %r ), %r, 
+			footer( %qw names )
+		);
+
+@set [v( d.bnww )]/C.NAME = regexp no_parse
+
+
+/*
+================================================================================
+== NAME: Displays & Formating ==================================================
+
+
+--------------------------------------------------------------------------------
+-- Name: Display One Line ------------------------------------------------------
+*/
+
+&display.name.lines [v( d.bnww )]=
+	u( format.name.one-line, 
+		moniker( %0 ), 
+		default( %0/alias, ansi( xh, %(none%) )), 
+		if( 
+			cor( hasflag( %0, unfindable ), hasflag( loc( %0 ), unfindable )), 
+			Unfindable, name( loc( %0 ))
+		), 
+		if( andflags( %0, c!D ), 
+			%xhidle [singletime( idle( %0 ))], 
+			singletime( sub( secs( ), convtime( get( %0/last )))) ago 
+		)
+	)
+
+
+/*
+--------------------------------------------------------------------------------
+-- Name: Format the Header -----------------------------------------------------
+*/
+
+&format.name.header [v( d.bnww )]=
+	trim( 
+		strtrunc( 
+			cat( 
+				ljust( %0, 20 ), 
+				ljust( %1, 10 ), 
+				ljust( %2, 35 ), 
+				%3 
+			), 
+			u( .width, %# )
+		), 
+		r 
+	)
+
+
+/*
+--------------------------------------------------------------------------------
+-- Name: Format One Line -------------------------------------------------------
+
+Yes, I know this is the same as 'header', but it might not always be.
+
+*/
+
+&format.name.one-line [v( d.bnww )]=
+	trim( 
+		strtrunc( 
+			cat( 
+				ljust( %0, 20 ), 
+				ljust( %1, 10 ), 
+				ljust( %2, 35 ), 
+				%3 
+			), 
+			u( .width, %# )
+		), 
+		r 
+	)
