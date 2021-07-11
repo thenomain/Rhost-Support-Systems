@@ -58,6 +58,7 @@ You will need the following user-defined functions:
 You will need something like the following user-defined functions:
 	isstaff( <dbref> ) - 1 if person is staff
 	isapproved( <dbref> ) - 1 if person is allowed to be in-character or staff
+	isapproved( <dbref>, status ) - returns 'approved' or 'unapproved', etc.
 	titlestr( <string to prettify >)
 	width( <target> ) - how wide is their screen?
 
@@ -99,6 +100,9 @@ for all of them.
 
 @adisconnect [v( d.bnww )]=
 	@dolist lattr( %!/adisconnect.* )={ @trigger %!/##=%# };
+
+@startup [v( d.bnww )]=
+	@dolist lattr( %!/startup.* )={ @trigger %!/## };
 
 
 
@@ -157,7 +161,7 @@ Functions that are generic and very quick.
 &.plural [v( d.bnww )]=strcat( %0, %b, if( eq( %0, 1 ), %1, %2 ))
 &.lwho [v( d.bnww )]=objeval( %0, lwho())
 &.isstaff [v( d.bnww )]=isstaff( %0 )
-&.isapproved [v( d.bnww )]=isapproved( %0 )
+&.isapproved [v( d.bnww )]=isapproved( %0, %1 )
 
 
 /*
@@ -233,6 +237,27 @@ Default: 80 characters
 */
 
 &.width [v( d.bnww )]=localize( if( isint( setr( w, width( %0 ))), %qw, 80 ))
+
+
+/*
+--------------------------------------------------------------------------------
+-- Dot Function: .inzone -------------------------------------------------------
+
+	u( .inzone, <zmo>, <target> )
+
+Is <target> part of the <zmo> zone?
+
+*/
+
+@switch/first version()=
+	rhost*, { 
+		&.inzone [v( d.bnww )]=lit( inzone( %0, %1 )); 
+	}, 
+	{ 
+		&.inzone [v( d.bnww )]=lit( strmatch( zone( %1 ), %0 )); 
+	}
+
+
 
 
 
