@@ -28,13 +28,13 @@ This is performed regardless of &pref.segregate.idle.
 @if [t( isdbref( 
 		setr( x, search( eroom=strmatch( name( ## ), Quiet Room )))
 	))]={ 
-		&pref.idle_room [v( d.bnww )]=%qx; 
+		&pref.idle.idle_room [v( d.bnww )]=%qx; 
 	}, 
 	{ 
 		think [ansi( hr, 
-			Can't find a Quiet Room. Setting &pref.idle_room to #0. 
+			Can't find a Quiet Room. Setting &pref.idle.idle_room to #0. 
 		)]; 
-		&pref.idle_room [v( d.bnww )]=#0; 
+		&pref.idle.idle_room [v( d.bnww )]=#0; 
 	}; 
 
 
@@ -91,7 +91,7 @@ Hmm. Maybe would be better to do:
 						t( u( pref.idle.exempt.code, %i0 )), 
 						strmatch( 
 							loc( %i0 ), 
-							v( pref.idle_room )
+							v( pref.idle.idle_room )
 						)
 					), 
 					%i0 
@@ -106,7 +106,7 @@ Hmm. Maybe would be better to do:
 	@dolist %qi={ 
 // .. it would be cool if we sent this message only once per room ..
 		@oemit ##=msg( zzzz, Moving a sleepy [u( .moniker, ## )]. ); 
-		@tel/quiet ##=v( pref.idle_room ); 
+		@tel/quiet ##=v( pref.idle.idle_room ); 
 		@pemit ##=msg( zzzz, Moved you to a safe location till you wake up... ) 
 	};
 
