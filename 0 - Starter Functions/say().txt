@@ -3,11 +3,11 @@
 == say() =======================================================================
 
 USAGE:
-	say( <target dbref>, <say or pose format> ): 
+	say( <target dbref>, <say or pose format>[, <use "you say"?>] ): 
 
 Allows code to spoof say-, pose- or emit-formatted code.
 
-Could use more access/security checks.
+Could use more access/security checks. Or any.
 
 */
 
@@ -18,10 +18,20 @@ Could use more access/security checks.
             :, [u( #UDF/.moniker, %0 )] %q2, 
             ;, [u( #UDF/.moniker, %0 )]%q2, 
             |, %q2, 
-            ", [u( #UDF/.moniker, %0 )] says%, “%q2”, 
-            [u( #UDF/.moniker, %0 )] says%, “%q1%q2” 
+// .. "x says"/"you say"
+            ", 
+            	[if( %2, 
+            		You say, 
+            		[u( #UDF/.moniker, %0 )] says
+            	)]%, “%q2”, 
+// .. "x says"/"you say"
+            	[if( %2, 
+            		You say, 
+            		[u( #UDF/.moniker, %0 )] says
+            	)]%, “%q1%q2”, 
         )
     )
+
 &HELP.SAY [v( d.udf )]=
     say( <target dbref>, <say or pose format> ): 
     Outputs the same as say/pose/emit.
