@@ -7,8 +7,8 @@ Define once, call multiple.
 
 */
 
-&UFUNC.MSG [v( d.udf )]=ansi( h, <%0>, n, %b%1 )
-&HELP.MSG [v( d.udf )]=
+&UFUNC.MSG #udf=ansi( h, <%0>, n, %b%1 )
+&HELP.MSG #udf=
     msg( <header>, <message> ): 
     A game-wide notice output.
 
@@ -19,4 +19,4 @@ Define once, call multiple.
 -- cleanup ---------------------------------------------------------------------
 */
 
-@trigger u( d.udf )/startup
+@trigger #udf/startup

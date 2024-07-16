@@ -14,7 +14,7 @@ At the top, always with text.
 
 */
 
-&UFUNC.HEADER [v( d.udf )]=
+&UFUNC.HEADER #udf=
 	printf( 
 		$^
 			[if( cand( isint( %1 ), gt( %1, 1 )), %1, 79 )]
@@ -22,7 +22,7 @@ At the top, always with text.
 		s, 
 		ansi( c, ., h, %b %0 %b, c, . )
 	)
-&HELP.HEADER [v( d.udf )]=
+&HELP.HEADER #udf=
     header( <text> ): 
     A game-wide output header.
 
@@ -37,7 +37,7 @@ In the middle, optional text near the left.
 
 */
 
-&UFUNC.DIVIDER [v( d.udf )]=
+&UFUNC.DIVIDER #udf=
 	printf( 
 		$-
 			[if( cand( isint( %1 ), gt( %1, 1 )), %1, 79 )]
@@ -47,7 +47,7 @@ In the middle, optional text near the left.
 			ansi( c, ..:, h, %b %0 %b, c, : )
 		)
 	)
-&HELP.DIVIDER [v( d.udf )]=
+&HELP.DIVIDER #udf=
     divider( [<text>] ): 
     A game-wide output divider.
 
@@ -61,7 +61,7 @@ At the bottom, optional text near the right.
 
 */
 
-&UFUNC.FOOTER [v( d.udf )]=
+&UFUNC.FOOTER #udf=
 	printf( 
 		$
 			[if( cand( isint( %1 ), gt( %1, 1 )), %1, 79 )]
@@ -71,7 +71,7 @@ At the bottom, optional text near the right.
 			ansi( c, ., h, %b %0 %b, c, .:: )
 		)
 	)
-&HELP.FOOTER [v( d.udf )]=
+&HELP.FOOTER #udf=
     footer( [<text>] ): 
     A game-wide output footer.
 
@@ -94,18 +94,18 @@ Requires: width()
 		) 
 	}
 
-&UFUNC.WHEADER [v( d.udf )]=header( %0, width( %# ))
-&HELP.WHEADER [v( d.udf )]=
+&UFUNC.WHEADER #udf=header( %0, width( %# ))
+&HELP.WHEADER #udf=
     wheader( <text> ): 
     A game-wide output header as wide as the user's screen.
 
-&UFUNC.WDIVIDER [v( d.udf )]=divider( %0, width( %# ))
-&HELP.WDIVIDER [v( d.udf )]=
+&UFUNC.WDIVIDER #udf=divider( %0, width( %# ))
+&HELP.WDIVIDER #udf=
     wdivider( [<text>] ): 
     A game-wide output divider as wide as the user's screen.
 
-&UFUNC.WFOOTER [v( d.udf )]=footer( %0, width( %# ))
-&HELP.WFOOTER [v( d.udf )]=
+&UFUNC.WFOOTER #udf=footer( %0, width( %# ))
+&HELP.WFOOTER #udf=
     wfooter( [<text>] ): 
     A game-wide output footer as wide as the user's screen.
 
@@ -116,4 +116,4 @@ Requires: width()
 -- cleanup ---------------------------------------------------------------------
 */
 
-@trigger u( d.udf )/startup
+@trigger #udf/startup

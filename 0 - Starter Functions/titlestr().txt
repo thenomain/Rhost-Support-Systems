@@ -14,7 +14,7 @@ d.titlestr-exception : Capitalize these words this way, exactly, no matter what.
 
 */
 
-&UFUNC.TITLESTR [v( d.udf )]=
+&UFUNC.TITLESTR #udf=
     iter( 
         lcstr( %0 ), 
         case( 1, 
@@ -79,20 +79,33 @@ d.titlestr-exception : Capitalize these words this way, exactly, no matter what.
             capstr( %i0 )
         )
     )
-&HELP.TITLESTR [v( d.udf )]=
+&HELP.TITLESTR #udf=
     titlestr( <string>[, <words to ignore>] ): 
     Outputs text in a 'title string' format, 
     will output <words to ignore> exactly as they are entered.
 
-&D.TITLESTR-NOTITLE [v( d.udf )]=
+&D.TITLESTR-NOTITLE #udf=
     a an the at by for in of on to up and as but it or nor
 
-&D.TITLESTR-PUNCTUATION [v( d.udf )]=
+&D.TITLESTR-PUNCTUATION #udf=
     . , ? ! ; : ( ) < > { } * / - + " '
 
-&D.TITLESTR-REGEXP [v( d.udf )]=
+&D.TITLESTR-REGEXP #udf=
     \[^[escape( u( d_titlestr-punctuation ))]\].*\\(.*\\)
 
-&D.TITLESTR-EXCEPTION [v( d.udf )]=
+&D.TITLESTR-EXCEPTION #udf=
     iPod von NPC BBS OOC IC EOD XP UFO DIY EMT EMTs FBI ASL EPD EU 
     DJ DJs TV VIP A&P DVD VCR PT
+
+
+/* 
+--------------------------------------------------------------------------------
+-- cleanup ---------------------------------------------------------------------
+*/
+
+@switch/first version()=
+	RhostMUSH*, { @@ do nothing }, 
+	{ @fo me=@edit [v( d.udf )]/*=#UDF, [v( d.udf )] }
+
+@trigger #udf/startup
+

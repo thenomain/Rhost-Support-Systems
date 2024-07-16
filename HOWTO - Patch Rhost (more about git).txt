@@ -1,0 +1,13 @@
+<<presjpolk>> when I submit a patch to rhost I do:  
+	git fetch vendor
+	git merge vendor/master master
+	git push
+	git checkout -b descriptive-name-of-branch
+	git push -u origin HEAD
+	<make changes>
+	git status
+	git diff
+	git commit -m "Description of fix"
+	git push
+
+

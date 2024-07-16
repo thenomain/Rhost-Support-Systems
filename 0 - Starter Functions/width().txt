@@ -13,7 +13,7 @@ q0: %0 if exists, else %# (user)
 
 */
 
-&UFUNC/PRIVILEGED.WIDTH [v( d.udf )]=
+&UFUNC/PRIVILEGED.WIDTH #udf=
     strcat( 
         setq( 0, if( t( %0 ), %0, %# )), 
         if( cor( isstaff( %@ ), haspower( %@, see_all ), strmatch( %#, %q0 )), 
@@ -21,7 +21,7 @@ q0: %0 if exists, else %# (user)
             #-1 Permission Denied 
         )
     )
-&HELP.WIDTH [v( d.udf )]=
+&HELP.WIDTH #udf=
     width( [<target>] ): 
     Allows players to set '&width' on themselves to force a non-80-character 
     width. Else assumes 80 characters.
@@ -32,4 +32,4 @@ q0: %0 if exists, else %# (user)
 -- cleanup ---------------------------------------------------------------------
 */
 
-@trigger u( d.udf )/startup
+@trigger #udf/startup

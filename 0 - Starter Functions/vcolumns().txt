@@ -46,7 +46,7 @@ registers:
 
 */
 
-&UFUNC.VCOLUMNS [v( d.udf )]=
+&UFUNC.VCOLUMNS #udf=
 //.. it's possible to have no properly defined columns, so error out then
 	if( 
 		not( cand( 
@@ -68,7 +68,7 @@ registers:
 					), 
 					setq( c, inc( %i0 ))
 				), 
-				, u(#UDF/.@@)
+				, @@()
 			), 
 /*
     at this this point, %qc will be 1 to 9
@@ -90,17 +90,18 @@ registers:
 			iter( lnum( %qc ), 
 				setq( %i0, 
 					[setr( w, first( v( %i0 ), : ))]:
+//					[edit( rest( v( %i0 ), : ), %qd, %r )] 
 					[wrap( edit( rest( v( %i0 ), : ), %qd, %r ), %qw, left )] 
 				), 
-				, u(#UDF/.@@)
+				, @@()
 			), 
 
 //.. h: height of the tallest column
 			iter( lnum( %qc ), 
 				setq( h, 
-					max( %qh, u( #UDF/.words, rest( r( %i0 ), : ), %r ))
+					max( %qh, mwords( rest( r( %i0 ), : ), %r ))
 				), 
-				, u(#UDF/.@@) 
+				, @@()
 			), 
 
 //.. 'from 1 to height do:'
@@ -113,7 +114,7 @@ registers:
 					if( 
 						strlen( 
 							setr( z, 
-								elements( 
+								elementsmux( 
 									rest( r( %i0 ), : ), 
 									inum(1),           // what row are we on?
 									mid( %r, 1, 1 )    // strip CR from CRLF
@@ -134,7 +135,7 @@ registers:
 		)
 	)
 
-&HELP.VCOLUMNS [v( d.udf )]=See in-depth help file.
+&HELP.VCOLUMNS #udf=See in-depth help file.
 
 /*
 VCOLUMNS HELP
@@ -185,5 +186,5 @@ LIMITATIONS:
 	RhostMUSH*, { @@ do nothing }, 
 	{ @fo me=@edit [v( d.udf )]/*=#UDF, [v( d.udf )] }
 
-@trigger v( d.udf )/startup
+@trigger #udf/startup
 

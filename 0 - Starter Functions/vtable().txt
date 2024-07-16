@@ -40,7 +40,7 @@ think vtable( this_is a pretty_decent_test to have for vtable, , , %b|%b )
 
 */
 
-&UFUNC.VTABLE [v( d.udf )]=
+&UFUNC.VTABLE #udf=
     strcat( 
 // d: delimiter (default space)
         setq( d, if( strlen( %2 ), %2, %b )), 
@@ -115,7 +115,7 @@ think vtable( this_is a pretty_decent_test to have for vtable, , , %b|%b )
             )
         )
     )
-&HELP.VTABLE [v( d.udf )]=See in-depth help file.
+&HELP.VTABLE #udf=See in-depth help file.
 
 /*
 VTABLE HELP
@@ -125,13 +125,13 @@ There should be a complex vcolumns help.
 I use this for my Code Object Data Parent.
 */
 
-&F.TRANSPOSE [v( d.udf )]=
+&F.TRANSPOSE #udf=
     iter( 
         lnum( 0, dec( %1 )), 
         iter( lnum( 0, dec( mul( %0, %1 )), , %1 ), add( 1, %i0, %i1 ))
     )
 
-&F.SLACKCOL [v( d.udf )]=
+&F.SLACKCOL #udf=
     strcat( 
         setq( s, sub( width( %# ), mul( ulocal( #UDF/f.widthcol, %0 ), %0 ))), 
         sub( 
@@ -140,7 +140,7 @@ I use this for my Code Object Data Parent.
         )
     )
 
-&F.WIDTHCOL [v( d.udf )]=
+&F.WIDTHCOL #udf=
     if( lt( %0, 2 ), 
         width( %# ), 
         floor( fdiv( sub( width( %# ), sub( %0, 1 )), %0 ))
@@ -158,5 +158,5 @@ I use this for my Code Object Data Parent.
 	RhostMUSH*, { @@ do nothing }, 
 	{ @fo me=@edit [v( d.udf )]/*=#UDF, [v( d.udf )] }
 
-@trigger v( d.udf )/startup
+@trigger #udf/startup
 

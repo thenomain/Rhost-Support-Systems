@@ -21,6 +21,10 @@ Requires:
 	wdivider(<text>): Game's "pretty" output divider
 	vtable(): Chime's vertical table layout system
 	titlestr(): String edit to prettify a title
+	width(): How to change screen widths on Rhost without NAWS
+
+Set in 'netrhost.conf':
+	attr_access describe default
 
 
 --------------------------------------------------------------------------------
@@ -55,7 +59,7 @@ Requires:
 
 @if not( comp( width(), lit(width())))={ 
 		think ansi( hr, 
-			>> width() doesn't exist%, so wheader() etc. won't work correctly. 
+			>> width() doesn't exist%, so vtable() etc. won't work correctly. 
 		) 
 	}
 
@@ -175,17 +179,33 @@ in the notes below.
 @switch/first version()=
 	RhostMUSH*, { 
 		@if not( strmatch( get( [v( d.codp )]/DescFormat ), *@@()* ))={
-			@edit [v( d.codp )]/DescFormat=@@, {@@()}; 
+			@edit #codp/DescFormat=@@, { @@() }; 
 		}; 
 		
-		@if eq( config(format_compatibility), 0 )={ 
-			@mvattr [v( d.codp )]=DescFormat, FormatDesc; 
-			@set [v( d.codp )]/FormatDesc = default; 
-		}, 
-		{
-			@set [v( d.codp )]/DescFormat = default; 
+		@if eq( config( format_compatibility ), 0 )={ 
+			@mvattr #codp=DescFormat, FormatDesc; 
 		}; 
 	}
+
+
+/* 
+
+ADD THE FOLLOWING TO NETRHOST.CONF:
+This makes Desc always look for &formatdesc (slight processor weight):
+
+	attr_access describe default
+
+*/
+
+
+
+
+
+
+
+
+
+
 
 
 /*
@@ -197,7 +217,7 @@ pre-formatting text:
 	@DescFormat
 	@ConFormat
 	@ExitFormat
-	(?? more ??)
+	(!! more !!)
 
 Rhost lets you build any pre-formatter you want, which is cool if you, for 
 example, want ShortdescFormat or SpectralFormat. Format all the things!
@@ -218,19 +238,18 @@ By default in Rhost, this is '0', or the original 'FormatDesc'.
 
 *** TWO: Is the attribute set 'default'? ***
 
-I'll be honest, I looked at the various help files and still don't understand 
-what this attribute flag is supposed to do, but it's critical for passing the 
-formatting down to children when you @parent to that object.
+The core attribute (Desc, Succ, OFail, etc.) needs to be set to the flag 
+"Default" to indicate to the Mush that it should be looking for a Formatter. 
+Why "Default"? Because history.
 
 You can put a line into the .config file to make this global:
-	admin attr_access=DescFormat default
-
-(Make it 'FormatDesc' if that's the attribute!)
+	attr_access desc default
 
 Or you can set the flag directly on the format attribute:
-	@set <object>/DescFormat=default
+	@set <object>/Desc=default
 
-For installers, this is how I opted to do it, to be safe.
+However, because this will not share the flag with Children when set Parent, 
+so we do the former for this installer.
 
 
 *** BONUS: Do I Set It With @ or & ? ***
@@ -238,6 +257,27 @@ For installers, this is how I opted to do it, to be safe.
 On Mux or Tiny, you can set the formats with '@<type>Format'. On Rhost, you must 
 use the at-sign attribute setting, '&<type>Format', which fortunately also works 
 on Mux.
+
+
+
+*******
+
+ASHEN TALKS ABOUT FORMATTING YOUR OWN ATTRIBUTE:
+
+
+Ashen-Shugar — Today at 8:38 PM
+
+Do play with @verb on the @va thing, now I'm damn curious if that'd work
+Well, fuck me, @verb works
+	> &ABBADABBADOO me=I'm Fred Flintstone
+	Set.
+	> &FORMATABBADABBADOO me=<<: %0 :>>
+	Set.
+	> @set me/abbadabbadoo=default
+	Set.
+	> @verb me=me,abbadabbadoo
+	<<: I'm Fred Flintstone :>>
+So there you go, with @verb you can default format any attribute
 
 
 */
