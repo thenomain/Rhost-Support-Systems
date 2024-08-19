@@ -18,20 +18,16 @@ d.titlestr-exception : Capitalize these words this way, exactly, no matter what.
     iter( 
         lcstr( %0 ), 
         case( 1, 
-            t( 
-                regmatch( 
-                    %i0, 
-                    u( #UDF/d.titlestr-regexp )
-                )
+            !!^regmatch( 
+                %i0, 
+                u( #UDF/d.titlestr-regexp )
             ), 
             %i0, 
 
-            t( 
-                setr( e, 
-                    grab( 
-                        u( #UDF/d.titlestr-punctuation ), 
-                        escape( right( %i0, 1 ))
-                    )
+            !!^setr( e, 
+                grab( 
+                    u( #UDF/d.titlestr-punctuation ), 
+                    escape( right( %i0, 1 ))
                 )
             ), 
             [ulocal( #UDF/ufunc.titlestr, 
@@ -40,34 +36,29 @@ d.titlestr-exception : Capitalize these words this way, exactly, no matter what.
             )]
             %qe, 
 
-            t( 
-                setr( e, 
-                    grab( 
-                        [u( #UDF/d.titlestr-exception )] 
-                        %1, 
-                        %i0 
-                    )
+            !!^setr( e, 
+                grab( 
+                    [u( #UDF/d.titlestr-exception )] 
+                    %1, 
+                    %i0 
                 )
             ), 
             %qe, 
 
             cand( 
-                t( 
-                    match( 
-                        u( #UDF/d.titlestr-notitle ), 
-                        %i0 
-                    )
+                !!^match( 
+                    u( #UDF/d.titlestr-notitle ), 
+                    %i0 
                 ), 
-                neq( inum( 0 ), 1 )
+//                neq( inum( 0 ), 1 )
+                neq( !%i_0, 1 )
             ), 
             %i0, 
 
-            t( 
-                setr( e, 
-                    grab( 
-                        u( #UDF/d.titlestr-punctuation ), 
-                        escape( strtrunc( %i0, 1 ))
-                    )
+            !!^setr( e, 
+                grab( 
+                    u( #UDF/d.titlestr-punctuation ), 
+                    escape( strtrunc( %i0, 1 ))
                 )
             ), 
             %qe
